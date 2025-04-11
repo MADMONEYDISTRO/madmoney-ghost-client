@@ -1,0 +1,13 @@
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+
+local function setAllRecoilToZero()
+	for _, descendant in pairs(ReplicatedStorage:GetDescendants()) do
+		if descendant.Name == "RecoilControl" and (descendant:IsA("NumberValue") or descendant:IsA("IntValue")) then
+			descendant.Value = 0
+			print("Set RecoilControl to 0:", descendant:GetFullName())
+		end
+	end
+end
+
+-- Run once
+setAllRecoilToZero()
