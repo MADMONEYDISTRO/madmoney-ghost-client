@@ -1,0 +1,248 @@
+--// TrapWare UI with Tabs, Themes, and Scrollable Sections
+
+-- Services
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local UserInputService = game:GetService("UserInputService")
+local player = Players.LocalPlayer
+local PlayerGui = player:WaitForChild("PlayerGui")
+
+-- UI Setup
+local screenGui = Instance.new("ScreenGui")
+screenGui.Name = "TrapWareUI"
+screenGui.ResetOnSpawn = false
+screenGui.Parent = PlayerGui
+
+local mainFrame = Instance.new("Frame")
+mainFrame.Size = UDim2.new(0, 400, 0, 300)
+mainFrame.Position = UDim2.new(0.5, -200, 0.5, -150)
+mainFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+mainFrame.Active = true
+mainFrame.Draggable = true
+mainFrame.Parent = screenGui
+Instance.new("UICorner", mainFrame).CornerRadius = UDim.new(0, 10)
+
+-- Minimize Button
+local minimizeButton = Instance.new("TextButton")
+minimizeButton.Size = UDim2.new(0, 90, 0, 28)
+minimizeButton.Position = UDim2.new(1, -100, 1, -38)
+minimizeButton.Text = "Minimize"
+minimizeButton.Font = Enum.Font.Gotham
+minimizeButton.TextSize = 14
+minimizeButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+minimizeButton.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
+minimizeButton.Parent = mainFrame
+Instance.new("UICorner", minimizeButton).CornerRadius = UDim.new(0, 6)
+
+local isMinimized = false
+minimizeButton.MouseButton1Click:Connect(function()
+	isMinimized = not isMinimized
+	screenGui.Enabled = not isMinimized
+end)
+
+-- Tabs
+local tabButtons = Instance.new("Frame")
+tabButtons.Size = UDim2.new(1, 0, 0, 40)
+tabButtons.BackgroundTransparency = 1
+tabButtons.Parent = mainFrame
+
+local tabs = {"Dashboard", "Main", "Themes"}
+local tabFrames = {}
+
+local function createTab(name, order)
+	local button = Instance.new("TextButton")
+	button.Size = UDim2.new(0, 130, 1, 0)
+	button.Position = UDim2.new(0, (order - 1) * 135, 0, 0)
+	button.Text = name
+	button.Font = Enum.Font.GothamSemibold
+	button.TextSize = 14
+	button.TextColor3 = Color3.fromRGB(255, 255, 255)
+	button.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+	button.Parent = tabButtons
+	Instance.new("UICorner", button).CornerRadius = UDim.new(0, 6)
+
+	local frame = Instance.new("Frame")
+	frame.Size = UDim2.new(1, -20, 1, -60)
+	frame.Position = UDim2.new(0, 10, 0, 50)
+	frame.BackgroundTransparency = 1
+	frame.Visible = (order == 1)
+	frame.Parent = mainFrame
+
+	tabFrames[name] = frame
+
+	button.MouseButton1Click:Connect(function()
+		for _, f in pairs(tabFrames) do f.Visible = false end
+		frame.Visible = true
+	end)
+end
+
+for i, tab in ipairs(tabs) do
+	createTab(tab, i)
+end
+
+-- Dashboard
+local dashLabel = Instance.new("TextLabel")
+dashLabel.Size = UDim2.new(1, 0, 0, 40)
+dashLabel.Text = "Welcome to TrapWare | Arsenal 🟢"
+dashLabel.Font = Enum.Font.GothamBold
+dashLabel.TextSize = 18
+dashLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+dashLabel.BackgroundTransparency = 1
+dashLabel.Parent = tabFrames["Dashboard"]
+
+local ytButton = Instance.new("TextButton")
+ytButton.Size = UDim2.new(1, 0, 0, 30)
+ytButton.Position = UDim2.new(0, 0, 0, 50)
+ytButton.Text = "Subscribe to my YouTube"
+ytButton.Font = Enum.Font.Gotham
+ytButton.TextSize = 14
+ytButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+ytButton.BackgroundColor3 = Color3.fromRGB(80, 0, 0)
+ytButton.Parent = tabFrames["Dashboard"]
+Instance.new("UICorner", ytButton).CornerRadius = UDim.new(0, 6)
+
+local discordButton = Instance.new("TextButton")
+discordButton.Size = UDim2.new(1, 0, 0, 30)
+discordButton.Position = UDim2.new(0, 0, 0, 90)
+discordButton.Text = "Join our Discord"
+discordButton.Font = Enum.Font.Gotham
+discordButton.TextSize = 14
+discordButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+discordButton.BackgroundColor3 = Color3.fromRGB(0, 60, 100)
+discordButton.Parent = tabFrames["Dashboard"]
+Instance.new("UICorner", discordButton).CornerRadius = UDim.new(0, 6)
+
+ytButton.MouseButton1Click:Connect(function()
+	pcall(function()
+		setclipboard("https://youtube.com/@yourchannel")
+	end)
+end)
+
+discordButton.MouseButton1Click:Connect(function()
+	pcall(function()
+		setclipboard("https://discord.gg/yourserver")
+	end)
+end)
+
+-- Scroll Areas
+local function createScrollArea(tab)
+	local scroll = Instance.new("ScrollingFrame")
+	scroll.Size = UDim2.new(1, 0, 1, 0)
+	scroll.CanvasSize = UDim2.new(0, 0, 0, 0)
+	scroll.ScrollBarThickness = 6
+	scroll.BackgroundTransparency = 1
+	scroll.Parent = tabFrames[tab]
+
+	local layout = Instance.new("UIListLayout")
+	layout.Padding = UDim.new(0, 6)
+	layout.SortOrder = Enum.SortOrder.LayoutOrder
+	layout.Parent = scroll
+
+	layout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
+		scroll.CanvasSize = UDim2.new(0, 0, 0, layout.AbsoluteContentSize.Y + 10)
+	end)
+
+	return scroll
+end
+
+local mainScroll = createScrollArea("Main")
+local themesScroll = createScrollArea("Themes")
+
+-- Sample Main Buttons
+for i = 1, 10 do
+	local b = Instance.new("TextButton")
+	b.Size = UDim2.new(1, -10, 0, 32)
+	b.Text = "Sample Action " .. i
+	b.Font = Enum.Font.Gotham
+	b.TextSize = 14
+	b.TextColor3 = Color3.new(1, 1, 1)
+	b.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+	b.Parent = mainScroll
+	Instance.new("UICorner", b).CornerRadius = UDim.new(0, 6)
+
+	if i == 1 then
+		b.Text = "Infinite Ammo"
+		b.MouseButton1Click:Connect(function()
+			task.spawn(function()
+				while true do
+					local success, err = pcall(function()
+						local gui = player:FindFirstChild("PlayerGui")
+						if gui and gui:FindFirstChild("GUI") then
+							local vars = gui.GUI:FindFirstChild("Client"):FindFirstChild("Variables")
+							if vars then
+								vars.ammocount.Value = 999
+								vars.ammocount2.Value = 999
+							end
+						end
+					end)
+					if not success then warn("Infinite Ammo Error:", err) end
+					task.wait(0.1)
+				end
+			end)
+		end)
+	elseif i == 2 then
+		b.Text = "Infinite Jump"
+		local jumping = false
+		b.MouseButton1Click:Connect(function()
+			jumping = not jumping
+			if jumping then
+				local character = player.Character or player.CharacterAdded:Wait()
+				local humanoid = character:WaitForChild("Humanoid")
+				UserInputService.JumpRequest:Connect(function()
+					if jumping and humanoid then
+						humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
+					end
+				end)
+			end
+		end)
+	elseif i == 3 then
+		b.Text = "Noclip"
+		local noclip = false
+		b.MouseButton1Click:Connect(function()
+			noclip = not noclip
+			local character = player.Character or player.CharacterAdded:Wait()
+			if noclip then
+				RunService.Stepped:Connect(function()
+					if noclip and character then
+						for _, part in pairs(character:GetDescendants()) do
+							if part:IsA("BasePart") and part.CanCollide then
+								part.CanCollide = false
+							end
+						end
+					end
+				end)
+			else
+				for _, part in pairs(character:GetDescendants()) do
+					if part:IsA("BasePart") then
+						part.CanCollide = true
+					end
+				end
+			end
+		end)
+	end
+end
+
+-- Themes (Moved Outside Main Loop!)
+local themes = {
+	Dark = Color3.fromRGB(30, 30, 30),
+	Light = Color3.fromRGB(240, 240, 240),
+	Purple = Color3.fromRGB(60, 40, 100),
+	Green = Color3.fromRGB(40, 80, 40),
+	Red = Color3.fromRGB(100, 40, 40)
+}
+
+for themeName, color in pairs(themes) do
+	local b = Instance.new("TextButton")
+	b.Size = UDim2.new(1, -10, 0, 32)
+	b.Text = "Apply Theme: " .. themeName
+	b.Font = Enum.Font.Gotham
+	b.TextSize = 14
+	b.TextColor3 = Color3.new(1, 1, 1)
+	b.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+	b.Parent = themesScroll
+	Instance.new("UICorner", b).CornerRadius = UDim.new(0, 6)
+
+	b.MouseButton1Click:Connect(function()
+		mainFrame.BackgroundColor3 = color
+	end)
+end
