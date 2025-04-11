@@ -1,0 +1,21 @@
+local player = game.Players.LocalPlayer
+local username = player.Name
+
+-- Navigate to the BaseSpeed value
+local criminalsFolder = workspace:FindFirstChild("Criminals")
+if criminalsFolder then
+    local playerModel = criminalsFolder:FindFirstChild(username)
+    if playerModel then
+        local baseSpeed = playerModel:FindFirstChild("BaseSpeed")
+        if baseSpeed and baseSpeed:IsA("NumberValue") then
+            baseSpeed.Value = 55
+            print("✅ BaseSpeed set to 55 for " .. username)
+        else
+            warn("❌ BaseSpeed not found or not a NumberValue in player model.")
+        end
+    else
+        warn("❌ Player model not found in Criminals folder.")
+    end
+else
+    warn("❌ Criminals folder not found in Workspace.")
+end
