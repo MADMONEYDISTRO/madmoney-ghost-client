@@ -1,0 +1,14 @@
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+
+local function zeroOutSpreadValues()
+	for _, item in pairs(ReplicatedStorage:GetDescendants()) do
+		if item:IsA("NumberValue") or item:IsA("IntValue") then
+			if item.Name == "MaxSpread" or item.Name == "Spread" or item.Name == "SpreadRecovery" then
+				item.Value = 0
+				print("Set", item.Name, "to 0 at", item:GetFullName())
+			end
+		end
+	end
+end
+
+zeroOutSpreadValues()
