@@ -1,0 +1,93 @@
+local UserInputService = game:GetService("UserInputService")
+local Players = game:GetService("Players")
+local player = Players.LocalPlayer
+local playerGui = player:WaitForChild("PlayerGui")
+
+-- Create GUI
+local screenGui = Instance.new("ScreenGui")
+screenGui.Name = "BlatantToggleUI"
+screenGui.Parent = playerGui
+screenGui.ResetOnSpawn = false
+
+-- Main Frame
+local mainFrame = Instance.new("Frame")
+mainFrame.Size = UDim2.new(0, 300, 0, 350)
+mainFrame.Position = UDim2.new(0.5, -150, 0.5, -175)
+mainFrame.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
+mainFrame.Visible = true
+mainFrame.Active = true
+mainFrame.Draggable = true
+mainFrame.Parent = screenGui
+
+-- Rounded corners
+local corner = Instance.new("UICorner")
+corner.CornerRadius = UDim.new(0, 12)
+corner.Parent = mainFrame
+
+-- Title label
+local title = Instance.new("TextLabel")
+title.Size = UDim2.new(1, -20, 0, 40)
+title.Position = UDim2.new(0, 10, 0, 10)
+title.BackgroundTransparency = 1
+title.Text = "Press 'P' to toggle blatant gui"
+title.TextColor3 = Color3.new(1, 1, 1)
+title.TextScaled = true
+title.Font = Enum.Font.GothamSemibold
+title.Parent = mainFrame
+
+-- Scrolling Frame for buttons
+local scrollFrame = Instance.new("ScrollingFrame")
+scrollFrame.Size = UDim2.new(1, -20, 1, -70)
+scrollFrame.Position = UDim2.new(0, 10, 0, 60)
+scrollFrame.CanvasSize = UDim2.new(0, 0, 0, 600) -- Extended canvas size
+scrollFrame.ScrollBarThickness = 6
+scrollFrame.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
+scrollFrame.BorderSizePixel = 0
+scrollFrame.Parent = mainFrame
+
+local scrollCorner = Instance.new("UICorner")
+scrollCorner.CornerRadius = UDim.new(0, 8)
+scrollCorner.Parent = scrollFrame
+
+-- Layout for buttons
+local layout = Instance.new("UIListLayout")
+layout.Padding = UDim.new(0, 10)
+layout.Parent = scrollFrame
+
+-- Sample Buttons
+for i = 1, 10 do
+	local button = Instance.new("TextButton")
+	button.Size = UDim2.new(1, 0, 0, 40)
+	button.Text = "Blatant Feature " .. i
+	button.TextScaled = true
+	button.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
+	button.TextColor3 = Color3.new(1, 1, 1)
+	button.Font = Enum.Font.FredokaOne
+	button.Parent = scrollFrame
+
+	local btnCorner = Instance.new("UICorner")
+	btnCorner.CornerRadius = UDim.new(0, 8)
+	btnCorner.Parent = button
+
+	button.MouseButton1Click:Connect(function()
+		print("Clicked Blatant Feature " .. i)
+	end)
+end
+
+-- Warning label at bottom
+local warningLabel = Instance.new("TextLabel")
+warningLabel.Size = UDim2.new(1, 0, 0, 60)
+warningLabel.TextWrapped = true
+warningLabel.BackgroundTransparency = 1
+warningLabel.TextColor3 = Color3.fromRGB(255, 80, 80)
+warningLabel.TextScaled = true
+warningLabel.Font = Enum.Font.GothamBold
+warningLabel.Text = "⚠️ WARNING: BLATANT FEATURES ARE MORE LIKELY TO GET YOU BANNED. PLEASE USE ALTS."
+warningLabel.Parent = scrollFrame
+
+-- Toggle UI with "P" key
+UserInputService.InputBegan:Connect(function(input, gameProcessed)
+	if not gameProcessed and input.KeyCode == Enum.KeyCode.P then
+		mainFrame.Visible = not mainFrame.Visible
+	end
+end)
