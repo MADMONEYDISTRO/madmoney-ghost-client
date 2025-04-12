@@ -7,7 +7,7 @@ local playerGui = player:WaitForChild("PlayerGui")
 local screenGui = Instance.new("ScreenGui")
 screenGui.Name = "BlatantToggleUI"
 screenGui.Parent = playerGui
-screenGui.ResetOnSpawn = false
+screenGui.ResetOnSpawn = false  
 
 -- Main Frame
 local mainFrame = Instance.new("Frame")
@@ -54,11 +54,41 @@ local layout = Instance.new("UIListLayout")
 layout.Padding = UDim.new(0, 10)
 layout.Parent = scrollFrame
 
--- Sample Buttons
+-- Fly toggle state and function
+local flyEnabled = false
+local flyConnection = nil
+
+local function enableFly()
+	local char = player.Character or player.CharacterAdded:Wait()
+	local hrp = char:WaitForChild("HumanoidRootPart")
+	local camera = workspace.CurrentCamera
+
+	flyConnection = game:GetService("RunService").RenderStepped:Connect(function()
+		if not flyEnabled then return end
+		local moveVec = Vector3.new()
+		if UserInputService:IsKeyDown(Enum.KeyCode.W) then moveVec += camera.CFrame.LookVector end
+		if UserInputService:IsKeyDown(Enum.KeyCode.S) then moveVec -= camera.CFrame.LookVector end
+		if UserInputService:IsKeyDown(Enum.KeyCode.A) then moveVec -= camera.CFrame.RightVector end
+		if UserInputService:IsKeyDown(Enum.KeyCode.D) then moveVec += camera.CFrame.RightVector end
+		hrp.Velocity = moveVec.Unit * 60
+	end)
+end
+
+local function disableFly()
+	if flyConnection then
+		flyConnection:Disconnect()
+		flyConnection = nil
+	end
+	if player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
+		player.Character.HumanoidRootPart.Velocity = Vector3.zero
+	end
+end
+
+-- Sample Buttons with toggle logic
 for i = 1, 10 do
 	local button = Instance.new("TextButton")
 	button.Size = UDim2.new(1, 0, 0, 40)
-	button.Text = "Blatant Feature " .. i
+	button.Text = (i == 1) and "Bypassed Fly" or ("Blatant Feature " .. i)
 	button.TextScaled = true
 	button.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
 	button.TextColor3 = Color3.new(1, 1, 1)
@@ -70,7 +100,16 @@ for i = 1, 10 do
 	btnCorner.Parent = button
 
 	button.MouseButton1Click:Connect(function()
-		print("Clicked Blatant Feature " .. i)
+		if i == 1 then
+			flyEnabled = not flyEnabled
+			if flyEnabled then
+				enableFly()
+			else
+				disableFly()
+			end
+		else
+			print("Clicked Blatant Feature " .. i)
+		end
 	end)
 end
 
