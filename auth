@@ -1,0 +1,146 @@
+local player = game:GetService("Players").LocalPlayer
+local playerGui = player:WaitForChild("PlayerGui")
+local TweenService = game:GetService("TweenService")
+
+-- Preset valid keys (modify these as needed)
+local validKeys = {
+    "7K9R2T4ZQ",
+    "L83M5N9P1",
+    "F6H2V8D3X",
+    "Q5W9E7R2T",
+    "4B7N1J8K3",
+    "9Y2G5C8V7",
+    "X3M6Z9L4P",
+    "T8H4S1D6F",
+    "2J7K5G3R9",
+    "N4V8B6M2Q"
+}
+
+-- Create login GUI
+local loginGui = Instance.new("ScreenGui")
+loginGui.Name = "LoginGui"
+loginGui.ResetOnSpawn = false
+
+local loginFrame = Instance.new("Frame")
+loginFrame.Name = "LoginFrame"
+loginFrame.Size = UDim2.new(0, 350, 0, 200)
+loginFrame.Position = UDim2.new(0.5, -175, 1.5, 0) -- Start offscreen
+loginFrame.AnchorPoint = Vector2.new(0.5, 0.5)
+loginFrame.BackgroundColor3 = Color3.fromRGB(28, 28, 28)
+loginFrame.BorderSizePixel = 0
+Instance.new("UICorner", loginFrame).CornerRadius = UDim.new(0, 8)
+
+local shadow = Instance.new("ImageLabel")
+shadow.Image = "rbxassetid://1316045217"
+shadow.ScaleType = Enum.ScaleType.Slice
+shadow.SliceCenter = Rect.new(10, 10, 118, 118)
+shadow.ImageTransparency = 0.8
+shadow.Size = UDim2.new(1, 10, 1, 10)
+shadow.Position = UDim2.new(0, -5, 0, -5)
+shadow.BackgroundTransparency = 1
+shadow.ZIndex = 0
+shadow.Parent = loginFrame
+
+local title = Instance.new("TextLabel")
+title.Text = "Trapware Private Login"
+title.Font = Enum.Font.SourceSansSemibold
+title.TextSize = 20
+title.TextColor3 = Color3.new(1, 1, 1)
+title.Size = UDim2.new(1, 0, 0, 40)
+title.BackgroundTransparency = 1
+title.Parent = loginFrame
+
+local keyBox = Instance.new("TextBox")
+keyBox.PlaceholderText = "Enter Access Key"
+keyBox.Size = UDim2.new(0.8, 0, 0, 40)
+keyBox.Position = UDim2.new(0.1, 0, 0.3, 0)
+keyBox.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
+keyBox.TextColor3 = Color3.new(1, 1, 1)
+keyBox.Font = Enum.Font.SourceSans
+keyBox.TextSize = 16
+Instance.new("UICorner", keyBox).CornerRadius = UDim.new(0, 4)
+keyBox.Parent = loginFrame
+
+local submitButton = Instance.new("TextButton")
+submitButton.Text = "Authenticate"
+submitButton.Size = UDim2.new(0.8, 0, 0, 40)
+submitButton.Position = UDim2.new(0.1, 0, 0.6, 0)
+submitButton.BackgroundColor3 = Color3.fromRGB(0, 120, 215)
+submitButton.Font = Enum.Font.SourceSansSemibold
+submitButton.TextColor3 = Color3.new(1, 1, 1)
+submitButton.TextSize = 16
+Instance.new("UICorner", submitButton).CornerRadius = UDim.new(0, 4)
+submitButton.Parent = loginFrame
+
+local errorLabel = Instance.new("TextLabel")
+errorLabel.Text = ""
+errorLabel.TextColor3 = Color3.fromRGB(255, 50, 50)
+errorLabel.Font = Enum.Font.SourceSans
+errorLabel.TextSize = 14
+errorLabel.Size = UDim2.new(0.8, 0, 0, 20)
+errorLabel.Position = UDim2.new(0.1, 0, 0.5, -10)
+errorLabel.BackgroundTransparency = 1
+errorLabel.Visible = false
+errorLabel.Parent = loginFrame
+
+loginFrame.Parent = loginGui
+loginGui.Parent = playerGui
+
+-- Animation functions
+local function shakeLoginFrame()
+    local xPos = loginFrame.Position.X.Offset
+    TweenService:Create(loginFrame, TweenInfo.new(0.1, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut, 3), {
+        Position = UDim2.new(0.5, xPos + 5, 0.5, loginFrame.Position.Y.Offset)
+    }):Play()
+end
+
+-- Authentication check
+local function authenticate(inputKey)
+    local cleanedKey = inputKey:upper():gsub("%s+", "")
+    for _, validKey in pairs(validKeys) do
+        if cleanedKey == validKey then
+            return true
+        end
+    end
+    return false
+end
+
+-- Submit handler
+submitButton.MouseButton1Click:Connect(function()
+    local inputKey = keyBox.Text
+    
+    if authenticate(inputKey) then
+        -- Valid key - fade out and load script
+        local fadeOut = TweenService:Create(loginFrame, TweenInfo.new(0.3), {
+            Position = UDim2.new(0.5, -175, 1.5, 0),
+            BackgroundTransparency = 1
+        })
+        fadeOut:Play()
+        fadeOut.Completed:Wait()
+        loginGui:Destroy()
+        
+        -- Execute main script
+        loadstring(game:HttpGet("https://raw.githubusercontent.com/MADMONEYDISTRO/madmoney-ghost-client/refs/heads/main/main"))()
+    else
+        -- Invalid key animation
+        errorLabel.Text = "Invalid access key!"
+        errorLabel.Visible = true
+        keyBox.Text = ""
+        shakeLoginFrame()
+        task.wait(2)
+        errorLabel.Visible = false
+    end
+end)
+
+-- Enter key support
+keyBox.FocusLost:Connect(function(enterPressed)
+    if enterPressed then
+        submitButton.MouseButton1Click:Connect()
+    end
+end)
+
+-- Initial animation
+local slideIn = TweenService:Create(loginFrame, TweenInfo.new(0.5, Enum.EasingStyle.Back), {
+    Position = UDim2.new(0.5, -175, 0.5, -100)
+})
+slideIn:Play()
