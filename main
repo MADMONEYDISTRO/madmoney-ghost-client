@@ -1,3 +1,12 @@
+--░▒▓█▓▒░░▒▓█▓▒░  ░▒▓█▓▒░      ░▒▓████████▓▒░      ░▒▓█▓▒░ 
+--░▒▓█▓▒░░▒▓█▓▒░▒▓████▓▒░      ░▒▓█▓▒░░▒▓█▓▒░   ░▒▓████▓▒░ 
+-- ░▒▓█▓▒▒▓█▓▒░   ░▒▓█▓▒░      ░▒▓█▓▒░░▒▓█▓▒░      ░▒▓█▓▒░ 
+-- ░▒▓█▓▒▒▓█▓▒░   ░▒▓█▓▒░      ░▒▓█▓▒░░▒▓█▓▒░      ░▒▓█▓▒░ 
+--  ░▒▓█▓▓█▓▒░    ░▒▓█▓▒░      ░▒▓█▓▒░░▒▓█▓▒░      ░▒▓█▓▒░ 
+--  ░▒▓█▓▓█▓▒░    ░▒▓█▓▒░▒▓██▓▒░▒▓█▓▒░░▒▓█▓▒░▒▓██▓▒░▒▓█▓▒░ 
+--  ░▒▓██▓▒░     ░▒▓█▓▒░▒▓██▓▒░▒▓████████▓▒░▒▓██▓▒░▒▓█▓▒░ 
+                                                         
+                                                         
 local player = game:GetService("Players").LocalPlayer
 local playerGui = player:WaitForChild("PlayerGui")
 local TweenService = game:GetService("TweenService")
@@ -219,7 +228,7 @@ contentFrame.Parent = mainFrame
 Instance.new("UICorner", contentFrame).CornerRadius = UDim.new(0, 6)
 
 local tabs = {
-    {Name = "Dashboard", Content = "Welcome to Trapware!\nVersion 1.0.0"},
+    {Name = "Dashboard", Content = "Welcome to Trapware!\nVersion v1.0.1"},
     {Name = "Main", Content = "Select an action:"},
     {Name = "Settings", Content = "General Settings"},
     {Name = "Themes", Content = "UI Theme Selection"}
