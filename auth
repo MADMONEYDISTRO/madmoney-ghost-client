@@ -2,7 +2,7 @@ local player = game:GetService("Players").LocalPlayer
 local playerGui = player:WaitForChild("PlayerGui")
 local TweenService = game:GetService("TweenService")
 
--- Preset valid keys (modify these as needed)
+--Preset val key (changing this horrid shit later)
 local validKeys = {
     "7K9R2T4ZQ",
     "L83M5N9P1",
@@ -16,7 +16,6 @@ local validKeys = {
     "N4V8B6M2Q"
 }
 
--- Create login GUI
 local loginGui = Instance.new("ScreenGui")
 loginGui.Name = "LoginGui"
 loginGui.ResetOnSpawn = false
@@ -86,7 +85,7 @@ errorLabel.Parent = loginFrame
 loginFrame.Parent = loginGui
 loginGui.Parent = playerGui
 
--- Animation functions
+--Animation functions
 local function shakeLoginFrame()
     local xPos = loginFrame.Position.X.Offset
     TweenService:Create(loginFrame, TweenInfo.new(0.1, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut, 3), {
@@ -94,7 +93,7 @@ local function shakeLoginFrame()
     }):Play()
 end
 
--- Authentication check
+--Authentication check
 local function authenticate(inputKey)
     local cleanedKey = inputKey:upper():gsub("%s+", "")
     for _, validKey in pairs(validKeys) do
@@ -105,12 +104,12 @@ local function authenticate(inputKey)
     return false
 end
 
--- Submit handler
+--handler
 submitButton.MouseButton1Click:Connect(function()
     local inputKey = keyBox.Text
     
     if authenticate(inputKey) then
-        -- Valid key - fade out and load script
+        --Val key - fade out and load script
         local fadeOut = TweenService:Create(loginFrame, TweenInfo.new(0.3), {
             Position = UDim2.new(0.5, -175, 1.5, 0),
             BackgroundTransparency = 1
@@ -119,10 +118,10 @@ submitButton.MouseButton1Click:Connect(function()
         fadeOut.Completed:Wait()
         loginGui:Destroy()
         
-        -- Execute main script
+        --Execute main script
         loadstring(game:HttpGet("https://raw.githubusercontent.com/MADMONEYDISTRO/madmoney-ghost-client/refs/heads/main/main"))()
     else
-        -- Invalid key animation
+        --Inval key animation
         errorLabel.Text = "Invalid access key!"
         errorLabel.Visible = true
         keyBox.Text = ""
@@ -132,14 +131,14 @@ submitButton.MouseButton1Click:Connect(function()
     end
 end)
 
--- Enter key support
+--key support
 keyBox.FocusLost:Connect(function(enterPressed)
     if enterPressed then
         submitButton.MouseButton1Click:Connect()
     end
 end)
 
--- Initial animation
+--animation
 local slideIn = TweenService:Create(loginFrame, TweenInfo.new(0.5, Enum.EasingStyle.Back), {
     Position = UDim2.new(0.5, -175, 0.5, -100)
 })
