@@ -1,21 +1,220 @@
-local player = game.Players.LocalPlayer
-local username = player.Name
+local Players = game:GetService("Players")
+local UIS = game:GetService("UserInputService")
+local RunService = game:GetService("RunService")
+local TweenService = game:GetService("TweenService")
 
--- Navigate to the BaseSpeed value
-local criminalsFolder = workspace:FindFirstChild("Criminals")
-if criminalsFolder then
-    local playerModel = criminalsFolder:FindFirstChild(username)
-    if playerModel then
-        local baseSpeed = playerModel:FindFirstChild("BaseSpeed")
-        if baseSpeed and baseSpeed:IsA("NumberValue") then
-            baseSpeed.Value = 55
-            print("✅ BaseSpeed set to 55 for " .. username)
-        else
-            warn("❌ BaseSpeed not found or not a NumberValue in player model.")
-        end
+-- UI Setup
+local player = Players.LocalPlayer
+local gui = Instance.new("ScreenGui")
+gui.Name = "SpeedControlUI"
+gui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+gui.Parent = player:WaitForChild("PlayerGui")
+
+-- Main Container
+local mainFrame = Instance.new("Frame")
+mainFrame.Size = UDim2.new(0, 220, 0, 80)
+mainFrame.Position = UDim2.new(1, -240, 1, -100)
+mainFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+mainFrame.BackgroundTransparency = 0.2
+mainFrame.Parent = gui
+
+local UICorner = Instance.new("UICorner")
+UICorner.CornerRadius = UDim.new(0, 8)
+UICorner.Parent = mainFrame
+
+local UIStroke = Instance.new("UIStroke")
+UIStroke.Color = Color3.fromRGB(80, 80, 80)
+UIStroke.Thickness = 2
+UIStroke.Parent = mainFrame
+
+-- Header
+local header = Instance.new("TextLabel")
+header.Text = "MOVEMENT BYPASS"
+header.Font = Enum.Font.GothamSemibold
+header.TextSize = 14
+header.TextColor3 = Color3.fromRGB(200, 200, 200)
+header.Size = UDim2.new(1, 0, 0, 24)
+header.BackgroundTransparency = 1
+header.Parent = mainFrame
+
+-- Toggle Container
+local toggleContainer = Instance.new("Frame")
+toggleContainer.Size = UDim2.new(1, -20, 0, 40)
+toggleContainer.Position = UDim2.new(0, 10, 0, 30)
+toggleContainer.BackgroundTransparency = 1
+toggleContainer.Parent = mainFrame
+
+local toggleBackground = Instance.new("Frame")
+toggleBackground.Size = UDim2.new(0, 60, 0, 30)
+toggleBackground.AnchorPoint = Vector2.new(1, 0.5)
+toggleBackground.Position = UDim2.new(1, 0, 0.5, 0)
+toggleBackground.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+toggleBackground.Parent = toggleContainer
+
+local toggleUICorner = Instance.new("UICorner")
+toggleUICorner.CornerRadius = UDim.new(1, 0)
+toggleUICorner.Parent = toggleBackground
+
+local toggleButton = Instance.new("Frame")
+toggleButton.Size = UDim2.new(0, 24, 0, 24)
+toggleButton.Position = UDim2.new(0, 3, 0.5, -12)
+toggleButton.BackgroundColor3 = Color3.fromRGB(150, 150, 150)
+toggleButton.Parent = toggleBackground
+
+local buttonUICorner = Instance.new("UICorner")
+buttonUICorner.CornerRadius = UDim.new(1, 0)
+buttonUICorner.Parent = toggleButton
+
+-- Status Label
+local statusLabel = Instance.new("TextLabel")
+statusLabel.Text = "Status: Disabled"
+statusLabel.Font = Enum.Font.Gotham
+statusLabel.TextSize = 14
+statusLabel.TextColor3 = Color3.fromRGB(200, 200, 200)
+statusLabel.Size = UDim2.new(0, 120, 1, 0)
+statusLabel.BackgroundTransparency = 1
+statusLabel.Parent = toggleContainer
+
+-- Movement Variables
+local SPEED = 40
+local enabled = false
+local movementKeys = {
+    [Enum.KeyCode.W] = false,
+    [Enum.KeyCode.A] = false,
+    [Enum.KeyCode.S] = false,
+    [Enum.KeyCode.D] = false
+}
+local character, humanoid, rootPart
+
+-- Toggle Animation
+local function updateToggle()
+    local tweenInfo = TweenInfo.new(0.2, Enum.EasingStyle.Quad)
+    
+    if enabled then
+        TweenService:Create(toggleButton, tweenInfo, {
+            Position = UDim2.new(1, -27, 0.5, -12),
+            BackgroundColor3 = Color3.fromRGB(0, 255, 140)
+        }):Play()
+        TweenService:Create(toggleBackground, tweenInfo, {
+            BackgroundColor3 = Color3.fromRGB(0, 100, 60)
+        }):Play()
+        statusLabel.Text = "Status: Enabled"
     else
-        warn("❌ Player model not found in Criminals folder.")
+        TweenService:Create(toggleButton, tweenInfo, {
+            Position = UDim2.new(0, 3, 0.5, -12),
+            BackgroundColor3 = Color3.fromRGB(150, 150, 150)
+        }):Play()
+        TweenService:Create(toggleBackground, tweenInfo, {
+            BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+        }):Play()
+        statusLabel.Text = "Status: Disabled"
     end
-else
-    warn("❌ Criminals folder not found in Workspace.")
 end
+
+-- Toggle Input
+local debounce = false
+toggleBackground.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 and not debounce then
+        debounce = true
+        enabled = not enabled
+        updateToggle()
+        debounce = false
+    end
+end)
+
+-- Draggable UI
+local dragging, dragInput, dragStart, startPos
+
+mainFrame.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 then
+        dragging = true
+        dragStart = input.Position
+        startPos = mainFrame.Position
+        
+        input.Changed:Connect(function()
+            if input.UserInputState == Enum.UserInputState.End then
+                dragging = false
+            end
+        end)
+    end
+end)
+
+mainFrame.InputChanged:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseMovement then
+        dragInput = input
+    end
+end)
+
+UIS.InputChanged:Connect(function(input)
+    if input == dragInput and dragging then
+        local delta = input.Position - dragStart
+        mainFrame.Position = UDim2.new(
+            startPos.X.Scale,
+            startPos.X.Offset + delta.X,
+            startPos.Y.Scale,
+            startPos.Y.Offset + delta.Y
+        )
+    end
+end)
+
+-- Movement Functions
+local function handleCharacter(character)
+    humanoid = character:WaitForChild("Humanoid")
+    rootPart = character:WaitForChild("HumanoidRootPart")
+end
+
+player.CharacterAdded:Connect(handleCharacter)
+if player.Character then
+    handleCharacter(player.Character)
+end
+
+UIS.InputBegan:Connect(function(input)
+    if movementKeys[input.KeyCode] ~= nil then
+        movementKeys[input.KeyCode] = true
+    end
+end)
+
+UIS.InputEnded:Connect(function(input)
+    if movementKeys[input.KeyCode] ~= nil then
+        movementKeys[input.KeyCode] = false
+    end
+end)
+
+-- CFrame Movement
+local function moveCharacter(delta)
+    if not enabled or not rootPart or not humanoid or humanoid.Health <= 0 then
+        return
+    end
+
+    local direction = Vector3.new()
+    
+    if movementKeys[Enum.KeyCode.W] then
+        direction += rootPart.CFrame.LookVector
+    end
+    if movementKeys[Enum.KeyCode.S] then
+        direction -= rootPart.CFrame.LookVector
+    end
+    if movementKeys[Enum.KeyCode.D] then
+        direction += rootPart.CFrame.RightVector
+    end
+    if movementKeys[Enum.KeyCode.A] then
+        direction -= rootPart.CFrame.RightVector
+    end
+
+    if direction.Magnitude > 0 then
+        direction = direction.Unit * SPEED * delta
+        local newPosition = rootPart.Position + direction
+        rootPart.CFrame = CFrame.new(newPosition, newPosition + rootPart.CFrame.LookVector)
+    end
+end
+
+-- Movement Loop
+RunService.RenderStepped:Connect(function(delta)
+    pcall(moveCharacter, delta)
+end)
+
+-- Auto-cleanup
+player.CharacterRemoving:Connect(function()
+    humanoid = nil
+    rootPart = nil
+end)
