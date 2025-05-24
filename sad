@@ -529,10 +529,10 @@ elseif tab.Name == "Main" then
             self.BackgroundColor3 = noclipEnabled and colors.tabActive or colors.buttonBg
             noclip()
         end},
-        {Name = "chams/esp", Action = function(self)
+        {Name = "esp", Action = function(self)
             loadstring(game:HttpGet("https://pastebin.com/raw/hbeFNg82"))()
             self.BackgroundColor3 = colors.tabActive
-            https://raw.githubusercontent.com/MADMONEYDISTRO/madmoney-ghost-client/refs/heads/main/chams%20eps
+            loadstring(game:HttpGet("https://raw.githubusercontent.com/MADMONEYDISTRO/madmoney-ghost-client/refs/heads/main/chams%20eps"))()
             wait(0.2)
             self.BackgroundColor3 = colors.buttonBg
         end},
