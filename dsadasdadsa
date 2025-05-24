@@ -1,0 +1,207 @@
+
+local loadingGui = Instance.new("ScreenGui")
+loadingGui.Name = "LoadingUI"
+loadingGui.ZIndexBehavior = Enum.ZIndexBehavior.Global
+loadingGui.DisplayOrder = 999
+loadingGui.Parent = game.Players.LocalPlayer:WaitForChild("PlayerGui")
+
+local loadingFrame = Instance.new("Frame")
+loadingFrame.Size = UDim2.new(0, 300, 0, 150)
+loadingFrame.Position = UDim2.new(0.5, -150, 0.5, -75)
+loadingFrame.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+loadingFrame.Parent = loadingGui
+Instance.new("UICorner", loadingFrame).CornerRadius = UDim.new(0, 8)
+
+local loadingText = Instance.new("TextLabel")
+loadingText.Size = UDim2.new(1, 0, 0, 40)
+loadingText.Position = UDim2.new(0, 0, 0, 20)
+loadingText.Text = "Loading Kill All..."
+loadingText.Font = Enum.Font.GothamBold
+loadingText.TextSize = 20
+loadingText.TextColor3 = Color3.fromRGB(255, 255, 255)
+loadingText.BackgroundTransparency = 1
+loadingText.Parent = loadingFrame
+
+local progressBar = Instance.new("Frame")
+progressBar.Size = UDim2.new(0.8, 0, 0, 10)
+progressBar.Position = UDim2.new(0.1, 0, 0, 80)
+progressBar.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
+progressBar.Parent = loadingFrame
+Instance.new("UICorner", progressBar).CornerRadius = UDim.new(1, 0)
+
+local progressFill = Instance.new("Frame")
+progressFill.Size = UDim2.new(0, 0, 1, 0)
+progressFill.BackgroundColor3 = Color3.fromRGB(170, 0, 0)
+progressFill.Parent = progressBar
+Instance.new("UICorner", progressFill).CornerRadius = UDim.new(1, 0)
+
+local assetText = Instance.new("TextLabel")
+assetText.Size = UDim2.new(1, 0, 0, 20)
+assetText.Position = UDim2.new(0, 0, 0, 100)
+assetText.Text = "Initializing..."
+assetText.Font = Enum.Font.Gotham
+assetText.TextSize = 14
+assetText.TextColor3 = Color3.fromRGB(200, 200, 200)
+assetText.BackgroundTransparency = 1
+assetText.Parent = loadingFrame
+
+local loadSteps = {
+    {"Loading Dependencies", 0.5},
+    {"Initializing Team System", 1},
+    {"Setting Up Camera Controls", 0.7},
+    {"Configuring Input System", 0.8},
+            {"Preparing Teleportation", 1.2},
+            {"Optimizing Performance", 0.6},
+    {"Finalizing Setup", 0.3}
+}
+
+
+task.spawn(function()
+    local success, err = pcall(function()
+        local totalSteps = #loadSteps
+        
+        for i, step in ipairs(loadSteps) do
+            loadingText.Text = step[1]
+            assetText.Text = string.format("Loading asset %d/%d", i, totalSteps)
+            
+            -- Animate progress bar
+            local targetWidth = i/totalSteps
+            local tweenInfo = TweenInfo.new(step[2], Enum.EasingStyle.Quad)
+            game:GetService("TweenService"):Create(
+                progressFill,
+                tweenInfo,
+                {Size = UDim2.new(targetWidth, 0, 1, 0)}
+            ):Play()
+            
+            wait(step[2])
+        end
+    end)
+    
+    if success then
+        loadingGui:Destroy()
+        StartMainGameFunctions()
+    else
+        loadingText.Text = "Loading Failed!"
+        progressFill.BackgroundColor3 = Color3.new(1, 0, 0)
+        assetText.Text = "Error: "..tostring(err)
+        wait(3)
+        loadingGui:Destroy()
+    end
+end)
+
+
+function StartMainGameFunctions()
+    local Players = game:GetService("Players")
+    local UIS = game:GetService("UserInputService")
+    local RunService = game:GetService("RunService")
+    local TS = game:GetService("TweenService")
+
+    local localPlayer = Players.LocalPlayer
+    local camera = workspace.CurrentCamera
+    local cameraConnections = {}
+
+    local SPECTATOR_TEAM_NAMES = {
+        "Spectates", "Spectators", "Observers", "Dead", "Unspawned"
+    }
+
+    local function isSpectator(player)
+     
+        local team = player.Team
+        if team then
+            for _, name in ipairs(SPECTATOR_TEAM_NAMES) do
+                if team.Name:lower() == name:lower() then
+                    return true
+                end
+            end
+        end
+        
+       
+        local character = player.Character
+        if character then
+            local humanoid = character:FindFirstChild("Humanoid")
+            if humanoid and humanoid.Health <= 0 then
+                return true
+            end
+        end
+        return false
+    end
+
+    local function getClosestEnemy()
+        local character = localPlayer.Character
+        if not character or isSpectator(localPlayer) then return nil end
+
+        local hrp = character:FindFirstChild("HumanoidRootPart")
+        if not hrp then return nil end
+
+        local closestDistance = math.huge
+        local closestEnemy = nil
+
+        for _, player in pairs(Players:GetPlayers()) do
+            if player ~= localPlayer and not isSpectator(player) then
+                if player.Team ~= localPlayer.Team then
+                    local enemyChar = player.Character
+                    if enemyChar then
+                        local enemyHRP = enemyChar:FindFirstChild("HumanoidRootPart")
+                        if enemyHRP then
+                            local dist = (hrp.Position - enemyHRP.Position).Magnitude
+                            if dist < closestDistance then
+                                closestDistance = dist
+                                closestEnemy = enemyChar
+                            end
+                        end
+                    end
+                end
+            end
+        end
+
+        return closestEnemy
+    end
+
+    local function lockCameraOnTarget(targetHead, duration)
+      
+        for _, conn in pairs(cameraConnections) do
+            conn:Disconnect()
+        end
+        cameraConnections = {}
+
+        local startTime = tick()
+        local connection
+
+        connection = RunService.RenderStepped:Connect(function()
+            if tick() - startTime > duration or not targetHead or not targetHead.Parent then
+                connection:Disconnect()
+                return
+            end
+            camera.CFrame = CFrame.lookAt(camera.CFrame.Position, targetHead.Position)
+        end)
+        
+        table.insert(cameraConnections, connection)
+    end
+
+    local function teleportToEnemy(enemyChar)
+        if not enemyChar or isSpectator(localPlayer) then return end
+        local hrp = localPlayer.Character and localPlayer.Character:FindFirstChild("HumanoidRootPart")
+        local enemyHead = enemyChar:FindFirstChild("Head")
+
+        if hrp and enemyHead then
+            local offset = (enemyHead.CFrame.LookVector * -3) + Vector3.new(0, 1.5, 0)
+            hrp.CFrame = enemyHead.CFrame + offset
+            lockCameraOnTarget(enemyHead, 0.5)
+        end
+    end
+
+
+    UIS.InputBegan:Connect(function(input, gameProcessed)
+        if gameProcessed or isSpectator(localPlayer) then return end
+
+        if input.UserInputType == Enum.UserInputType.MouseButton1 then
+            local enemy = getClosestEnemy()
+            if enemy then
+                teleportToEnemy(enemy)
+            end
+        end
+    end)
+
+   
+    warn("Kill All system initialized!")
+end
