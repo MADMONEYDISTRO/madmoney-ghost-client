@@ -1,4 +1,4 @@
---v2 just not doing art right now
+--v2
                                                          
 local player = game:GetService("Players").LocalPlayer
 local playerGui = player:WaitForChild("PlayerGui")
@@ -529,9 +529,10 @@ elseif tab.Name == "Main" then
             self.BackgroundColor3 = noclipEnabled and colors.tabActive or colors.buttonBg
             noclip()
         end},
-        {Name = "player esp soon", Action = function(self)
+        {Name = "chams/esp", Action = function(self)
             loadstring(game:HttpGet("https://pastebin.com/raw/hbeFNg82"))()
             self.BackgroundColor3 = colors.tabActive
+            https://raw.githubusercontent.com/MADMONEYDISTRO/madmoney-ghost-client/refs/heads/main/chams%20eps
             wait(0.2)
             self.BackgroundColor3 = colors.buttonBg
         end},
@@ -547,7 +548,6 @@ elseif tab.Name == "Main" then
             wait(0.2)
             self.BackgroundColor3 = colors.buttonBg
         end},
-        -- Add Sample Buttons Below
         {Name = "Shader GUI", Action = function(self)
         self.BackgroundColor3 = colors.tabActive
         loadstring(game:HttpGet("https://raw.githubusercontent.com/MADMONEYDISTRO/madmoney-ghost-client/refs/heads/main/shader%20function"))()
