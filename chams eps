@@ -1,0 +1,192 @@
+local Players = game:GetService("Players")
+local player = Players.LocalPlayer
+local camera = workspace.CurrentCamera
+local RunService = game:GetService("RunService")
+
+local settings = {
+    Color = Color3.fromRGB(0, 255, 0),
+    Size = 15,
+    Transparency = 1,
+    AutoScale = true
+}
+
+local Library = loadstring(game:HttpGet("https://raw.githubusercontent.com/Blissful4992/ESPs/main/UniversalSkeleton.lua"))()
+
+local Skeletons = {}
+local NameTags = {}
+local espEnabled = false
+local connections = {}
+
+local playerGui = player:WaitForChild("PlayerGui")
+
+-- Create ScreenGui
+local screenGui = Instance.new("ScreenGui")
+screenGui.Name = "ESP_Toggle_GUI"
+screenGui.Parent = playerGui
+
+-- Create Frame container (for padding & nicer layout)
+local toggleFrame = Instance.new("Frame")
+toggleFrame.Size = UDim2.new(0, 120, 0, 40)
+toggleFrame.Position = UDim2.new(1, -130, 0, 15)
+toggleFrame.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
+toggleFrame.AnchorPoint = Vector2.new(1, 0)
+toggleFrame.BorderSizePixel = 0
+toggleFrame.Parent = screenGui
+toggleFrame.ClipsDescendants = true
+toggleFrame.Name = "ToggleFrame"
+Instance.new("UICorner", toggleFrame).CornerRadius = UDim.new(0, 10)
+
+-- Label text
+local label = Instance.new("TextLabel")
+label.Text = "ESP"
+label.Font = Enum.Font.GothamBold
+label.TextSize = 18
+label.TextColor3 = Color3.fromRGB(200, 200, 200)
+label.BackgroundTransparency = 1
+label.Size = UDim2.new(0, 50, 1, 0)
+label.Position = UDim2.new(0, 10, 0, 0)
+label.TextXAlignment = Enum.TextXAlignment.Left
+label.Parent = toggleFrame
+
+-- Toggle Button background (switch track)
+local toggleBg = Instance.new("Frame")
+toggleBg.Size = UDim2.new(0, 50, 0, 24)
+toggleBg.Position = UDim2.new(1, -60, 0.5, -12)
+toggleBg.BackgroundColor3 = Color3.fromRGB(80, 80, 80)
+toggleBg.Parent = toggleFrame
+Instance.new("UICorner", toggleBg).CornerRadius = UDim.new(1, 0)
+
+-- Toggle Button circle (switch knob)
+local toggleKnob = Instance.new("Frame")
+toggleKnob.Size = UDim2.new(0, 22, 0, 22)
+toggleKnob.Position = UDim2.new(0, 2, 0, 1)
+toggleKnob.BackgroundColor3 = Color3.fromRGB(170, 170, 170)
+toggleKnob.Parent = toggleBg
+Instance.new("UICorner", toggleKnob).CornerRadius = UDim.new(1, 0)
+
+-- Tween service for smooth toggling
+local TweenService = game:GetService("TweenService")
+local onTweenInfo = TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
+local offTweenInfo = TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
+
+local function setToggleState(on)
+    if on then
+        -- Move knob right & change colors
+        TweenService:Create(toggleKnob, onTweenInfo, {Position = UDim2.new(0, 26, 0, 1), BackgroundColor3 = Color3.fromRGB(0, 255, 0)}):Play()
+        TweenService:Create(toggleBg, onTweenInfo, {BackgroundColor3 = Color3.fromRGB(0, 100, 0)}):Play()
+    else
+        -- Move knob left & reset colors
+        TweenService:Create(toggleKnob, offTweenInfo, {Position = UDim2.new(0, 2, 0, 1), BackgroundColor3 = Color3.fromRGB(170, 170, 170)}):Play()
+        TweenService:Create(toggleBg, offTweenInfo, {BackgroundColor3 = Color3.fromRGB(80, 80, 80)}):Play()
+    end
+end
+
+local function ClearSkeletons()
+    for _, skeleton in pairs(Skeletons) do
+        if skeleton and skeleton.Destroy then
+            skeleton:Destroy()
+        end
+    end
+    Skeletons = {}
+
+    for _, nameTag in pairs(NameTags) do
+        if nameTag and nameTag.Remove then
+            nameTag:Remove()
+        elseif nameTag then
+            nameTag.Visible = false
+        end
+    end
+    NameTags = {}
+
+    for _, conn in pairs(connections) do
+        if conn and conn.Disconnect then
+            conn:Disconnect()
+        end
+    end
+    connections = {}
+end
+
+local function CreateSkeleton(plr)
+    local skeleton = Library:NewSkeleton(plr, true)
+    skeleton.Size = 50
+    skeleton.Static = true
+    table.insert(Skeletons, skeleton)
+
+    local nameTag = Drawing.new("Text")
+    nameTag.Visible = false
+    nameTag.Text = ""
+    nameTag.Color = settings.Color
+    nameTag.Size = settings.Size
+    nameTag.Center = true
+    nameTag.Transparency = settings.Transparency
+    table.insert(NameTags, nameTag)
+
+    local conn = RunService.RenderStepped:Connect(function()
+        if not espEnabled then
+            skeleton.Visible = false
+            nameTag.Visible = false
+            return
+        end
+
+        if plr.Character and plr.Character:FindFirstChild("HumanoidRootPart") then
+            local pos, onScreen = camera:WorldToViewportPoint(plr.Character.HumanoidRootPart.Position)
+            if onScreen and plr.Team ~= player.Team then
+                local dist = math.floor((player.Character.HumanoidRootPart.Position - plr.Character.HumanoidRootPart.Position).magnitude)
+                nameTag.Text = string.format("%s [%d Studs]", plr.Name, dist)
+                nameTag.Position = Vector2.new(pos.X, pos.Y - 50)
+                nameTag.Visible = true
+                skeleton.Visible = true
+            else
+                nameTag.Visible = false
+                skeleton.Visible = false
+            end
+        else
+            nameTag.Visible = false
+            skeleton.Visible = false
+        end
+    end)
+
+    table.insert(connections, conn)
+end
+
+local function ToggleESP(state)
+    espEnabled = state
+    setToggleState(espEnabled)
+
+    if espEnabled then
+        for _, plr in pairs(Players:GetPlayers()) do
+            if plr ~= player then
+                CreateSkeleton(plr)
+            end
+        end
+    else
+        ClearSkeletons()
+    end
+end
+
+toggleFrame.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 then
+        ToggleESP(not espEnabled)
+    end
+end)
+
+Players.PlayerAdded:Connect(function(plr)
+    if espEnabled and plr ~= player then
+        CreateSkeleton(plr)
+    end
+end)
+
+spawn(function()
+    while true do
+        if espEnabled then
+            for _, skeleton in pairs(Skeletons) do
+                if skeleton.Part then
+                    skeleton.Part.Anchored = true
+                end
+            end
+        end
+        wait(0.1)
+    end
+end)
+
+ToggleESP(false) -- start off disabled
