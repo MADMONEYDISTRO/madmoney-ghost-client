@@ -1,0 +1,785 @@
+--v2 just not doing art right now
+                                                         
+local player = game:GetService("Players").LocalPlayer
+local playerGui = player:WaitForChild("PlayerGui")
+local TweenService = game:GetService("TweenService")
+local infiniteJumpEnabled = false
+local noclipEnabled = false
+local noclipConnection = nil
+
+-- Main UI
+local screenGui = Instance.new("ScreenGui")
+screenGui.Name = "TrapwareUI"
+screenGui.ResetOnSpawn = false
+screenGui.Enabled = false
+
+local colorSchemes = {
+    Dark = {
+        background = Color3.fromRGB(28, 28, 28),
+        tabInactive = Color3.fromRGB(45, 45, 45),
+        tabActive = Color3.fromRGB(0, 120, 215),
+        text = Color3.fromRGB(220, 220, 220),
+        textActive = Color3.new(1, 1, 1),
+        border = Color3.fromRGB(60, 60, 60),
+        contentBg = Color3.fromRGB(35, 35, 35),
+        buttonBg = Color3.fromRGB(50, 50, 50),
+        buttonHover = Color3.fromRGB(70, 70, 70),
+        dragBar = Color3.fromRGB(40, 40, 40),
+        statsBg = Color3.fromRGB(30, 30, 30)
+    },
+    Light = {
+        background = Color3.fromRGB(240, 240, 240),
+        tabInactive = Color3.fromRGB(220, 220, 220),
+        tabActive = Color3.fromRGB(0, 120, 215),
+        text = Color3.fromRGB(50, 50, 50),
+        textActive = Color3.new(1, 1, 1),
+        border = Color3.fromRGB(200, 200, 200),
+        contentBg = Color3.new(1, 1, 1),
+        buttonBg = Color3.fromRGB(230, 230, 230),
+        buttonHover = Color3.fromRGB(210, 230, 255),
+        dragBar = Color3.fromRGB(225, 225, 225),
+        statsBg = Color3.fromRGB(245, 245, 245)
+    },
+    MidnightBlue = {
+        background = Color3.fromRGB(13, 19, 33),
+        tabInactive = Color3.fromRGB(23, 33, 53),
+        tabActive = Color3.fromRGB(0, 150, 255),
+        text = Color3.fromRGB(200, 210, 220),
+        textActive = Color3.new(1, 1, 1),
+        border = Color3.fromRGB(40, 60, 90),
+        contentBg = Color3.fromRGB(20, 30, 45),
+        buttonBg = Color3.fromRGB(30, 50, 70),
+        buttonHover = Color3.fromRGB(50, 80, 110),
+        dragBar = Color3.fromRGB(20, 40, 60),
+        statsBg = Color3.fromRGB(25, 35, 50)
+    },
+    Cyberpunk = {
+        background = Color3.fromRGB(20, 1, 35),
+        tabInactive = Color3.fromRGB(50, 5, 70),
+        tabActive = Color3.fromRGB(255, 0, 150),
+        text = Color3.fromRGB(220, 220, 220),
+        textActive = Color3.new(0, 0, 0),
+        border = Color3.fromRGB(100, 10, 130),
+        contentBg = Color3.fromRGB(30, 5, 45),
+        buttonBg = Color3.fromRGB(150, 0, 255),
+        buttonHover = Color3.fromRGB(200, 0, 255),
+        dragBar = Color3.fromRGB(80, 0, 120),
+        statsBg = Color3.fromRGB(40, 0, 60)
+    },
+    ForestGreen = {
+        background = Color3.fromRGB(13, 34, 23),
+        tabInactive = Color3.fromRGB(23, 54, 33),
+        tabActive = Color3.fromRGB(46, 204, 113),
+        text = Color3.fromRGB(200, 230, 210),
+        textActive = Color3.new(0, 0, 0),
+        border = Color3.fromRGB(40, 90, 60),
+        contentBg = Color3.fromRGB(20, 45, 30),
+        buttonBg = Color3.fromRGB(30, 70, 45),
+        buttonHover = Color3.fromRGB(50, 110, 70),
+        dragBar = Color3.fromRGB(20, 60, 40),
+        statsBg = Color3.fromRGB(25, 50, 35)
+    }
+}
+
+local currentTheme = "Dark"
+local colors = colorSchemes[currentTheme]
+
+local function infiniteJump()
+    local player = game:GetService("Players").LocalPlayer
+    local mouse = player:GetMouse()
+    
+    mouse.KeyDown:Connect(function(key)
+        if key == " " and infiniteJumpEnabled then
+            local humanoid = player.Character:FindFirstChildOfClass("Humanoid")
+            if humanoid then
+                humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
+            end
+        end
+    end)
+end
+
+local function noclip()
+    if noclipConnection then
+        noclipConnection:Disconnect()
+    end
+    
+    noclipConnection = game:GetService("RunService").Stepped:Connect(function()
+        if noclipEnabled and player.Character then
+            for _, part in pairs(player.Character:GetDescendants()) do
+                if part:IsA("BasePart") then
+                    part.CanCollide = false
+                end
+            end
+        end
+    end)
+end
+
+local mainFrame = Instance.new("Frame")
+mainFrame.Name = "MainFrame"
+mainFrame.Size = UDim2.new(0, 400, 0, 300)
+mainFrame.Position = UDim2.new(0.5, -200, 0.5, -150)
+mainFrame.AnchorPoint = Vector2.new(0.5, 0.5)
+mainFrame.BackgroundColor3 = colors.background
+mainFrame.BorderSizePixel = 0
+mainFrame.ClipsDescendants = true
+
+local shadow = Instance.new("ImageLabel")
+shadow.Name = "Shadow"
+shadow.Image = "rbxassetid://1316045217"
+shadow.ScaleType = Enum.ScaleType.Slice
+shadow.SliceCenter = Rect.new(10, 10, 118, 118)
+shadow.ImageTransparency = 0.8
+shadow.Size = UDim2.new(1, 10, 1, 10)
+shadow.Position = UDim2.new(0, -5, 0, -5)
+shadow.BackgroundTransparency = 1
+shadow.ZIndex = 0
+shadow.Parent = mainFrame
+
+mainFrame.Parent = screenGui
+
+local dragBar = Instance.new("Frame")
+dragBar.Name = "DragBar"
+dragBar.Size = UDim2.new(1, 0, 0, 30)
+dragBar.BackgroundColor3 = colors.dragBar
+dragBar.BorderSizePixel = 0
+dragBar.ZIndex = 2
+dragBar.Parent = mainFrame
+
+local dragTitle = Instance.new("TextLabel")
+dragTitle.Name = "Title"
+dragTitle.Size = UDim2.new(1, -40, 1, 0)
+dragTitle.Position = UDim2.new(0, 10, 0, 0)
+dragTitle.Text = "Trapware|Notoriety🟢"
+dragTitle.Font = Enum.Font.SourceSansSemibold
+dragTitle.TextSize = 16
+dragTitle.TextColor3 = colors.text
+dragTitle.TextXAlignment = Enum.TextXAlignment.Left
+dragTitle.BackgroundTransparency = 1
+dragTitle.ZIndex = 3
+dragTitle.Parent = dragBar
+
+local UserInputService = game:GetService("UserInputService")
+local dragging, dragInput, dragStart, startPos
+
+local function updateInput(input)
+    local delta = input.Position - dragStart
+    mainFrame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+end
+
+dragBar.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+        dragging = true
+        dragStart = input.Position
+        startPos = mainFrame.Position
+        
+        input.Changed:Connect(function()
+            if input.UserInputState == Enum.UserInputState.End then
+                dragging = false
+            end
+        end)
+    end
+end)
+
+dragBar.InputChanged:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
+        dragInput = input
+    end
+end)
+
+UserInputService.InputChanged:Connect(function(input)
+    if input == dragInput and dragging then
+        updateInput(input)
+    end
+end)
+
+local tabButtons = Instance.new("Frame")
+tabButtons.Name = "TabButtons"
+tabButtons.Size = UDim2.new(1, 0, 0, 40)
+tabButtons.Position = UDim2.new(0, 0, 0, 30)
+tabButtons.BackgroundTransparency = 1
+tabButtons.ZIndex = 2
+tabButtons.Parent = mainFrame
+
+local tabBorder = Instance.new("Frame")
+tabBorder.Name = "TabBorder"
+tabBorder.Size = UDim2.new(1, 0, 0, 1)
+tabBorder.Position = UDim2.new(0, 0, 0, 40)
+tabBorder.BackgroundColor3 = colors.border
+tabBorder.BorderSizePixel = 0
+tabBorder.ZIndex = 2
+tabBorder.Parent = tabButtons
+
+local contentFrame = Instance.new("Frame")
+contentFrame.Name = "ContentFrame"
+contentFrame.Size = UDim2.new(1, -20, 1, -90)
+contentFrame.Position = UDim2.new(0, 10, 0, 80)
+contentFrame.BackgroundColor3 = colors.contentBg
+contentFrame.BorderSizePixel = 0
+contentFrame.ZIndex = 1
+contentFrame.Parent = mainFrame
+
+Instance.new("UICorner", contentFrame).CornerRadius = UDim.new(0, 6)
+
+local tabs = {
+    {Name = "Dashboard", Content = "The world is yours!\nVersion v2.0.0"},
+    {Name = "Main", Content = "Select an action:"},
+    {Name = "Settings", Content = "General Settings"},
+    {Name = "Themes", Content = "UI Theme Selection"}
+}
+
+local tabContents = {}
+local tabButtonsList = {}
+
+local function createButton(parent, text, position, size)
+    local button = Instance.new("TextButton")
+    button.Name = text .. "Button"
+    button.Size = size or UDim2.new(0.9, 0, 0, 40)
+    button.Position = position or UDim2.new(0.05, 0, 0, 0)
+    button.Text = text
+    button.Font = Enum.Font.SourceSansSemibold
+    button.TextSize = 14
+    button.TextColor3 = colors.text
+    button.BackgroundColor3 = colors.buttonBg
+    button.AutoButtonColor = false
+    button.BorderSizePixel = 0
+    button.ZIndex = 2
+    
+    local corner = Instance.new("UICorner", button)
+    corner.CornerRadius = UDim.new(0, 4)
+    
+    button.MouseEnter:Connect(function()
+        game:GetService("TweenService"):Create(button, TweenInfo.new(0.15), {BackgroundColor3 = colors.buttonHover}):Play()
+    end)
+    
+    button.MouseLeave:Connect(function()
+        game:GetService("TweenService"):Create(button, TweenInfo.new(0.15), {BackgroundColor3 = colors.buttonBg}):Play()
+    end)
+    
+    button.MouseButton1Down:Connect(function()
+        game:GetService("TweenService"):Create(button, TweenInfo.new(0.1), {BackgroundColor3 = colors.tabActive}):Play()
+    end)
+    
+    button.MouseButton1Up:Connect(function()
+        game:GetService("TweenService"):Create(button, TweenInfo.new(0.1), {BackgroundColor3 = colors.buttonHover}):Play()
+    end)
+    
+    button.Parent = parent
+    return button
+end
+
+local function switchTheme(themeName)
+    currentTheme = themeName
+    colors = colorSchemes[themeName]
+    
+    mainFrame.BackgroundColor3 = colors.background
+    dragBar.BackgroundColor3 = colors.dragBar
+    dragTitle.TextColor3 = colors.text
+    tabBorder.BackgroundColor3 = colors.border
+    contentFrame.BackgroundColor3 = colors.contentBg
+    
+    for _, tabButton in ipairs(tabButtons:GetChildren()) do
+        if tabButton:IsA("TextButton") then
+            tabButton.BackgroundColor3 = tabButton.Text == "Dashboard" and colors.tabActive or colors.tabInactive
+            tabButton.TextColor3 = tabButton.Text == "Dashboard" and colors.textActive or colors.text
+        end
+    end
+    
+    for _, tabContent in ipairs(tabContents) do
+        for _, element in ipairs(tabContent:GetDescendants()) do
+            if element:IsA("TextButton") then
+                element.BackgroundColor3 = colors.buttonBg
+                element.TextColor3 = colors.text
+            end
+        end
+    end
+end
+
+for i, tab in ipairs(tabs) do
+    local tabButton = Instance.new("TextButton")
+    tabButton.Name = tab.Name .. "Tab"
+    tabButton.Size = UDim2.new(1/#tabs, 0, 1, 0)
+    tabButton.Position = UDim2.new((i-1)/#tabs, 0, 0, 0)
+    tabButton.Text = tab.Name
+    tabButton.Font = Enum.Font.SourceSansSemibold
+    tabButton.TextSize = 14
+    tabButton.BackgroundColor3 = i == 1 and colors.tabActive or colors.tabInactive
+    tabButton.TextColor3 = i == 1 and colors.textActive or colors.text
+    tabButton.BorderSizePixel = 0
+    tabButton.AutoButtonColor = false
+    tabButton.ZIndex = 3
+    tabButton.Parent = tabButtons
+    
+    if i == 1 or i == #tabs then
+        Instance.new("UICorner", tabButton).CornerRadius = UDim.new(0, 6)
+    end
+    
+    local contentContainer = Instance.new("Frame")
+    contentContainer.Name = tab.Name .. "Content"
+    contentContainer.Size = UDim2.new(1, 0, 1, 0)
+    contentContainer.BackgroundTransparency = 1
+    contentContainer.Visible = i == 1
+    contentContainer.ZIndex = 1
+    contentContainer.Parent = contentFrame
+    
+    if tab.Name == "Dashboard" then
+        local leftPanel = Instance.new("Frame")
+        leftPanel.Name = "LeftPanel"
+        leftPanel.Size = UDim2.new(0.6, -10, 1, -20)
+        leftPanel.Position = UDim2.new(0, 10, 0, 10)
+        leftPanel.BackgroundTransparency = 1
+        leftPanel.ZIndex = 1
+        leftPanel.Parent = contentContainer
+        
+        local content = Instance.new("TextLabel")
+        content.Name = "ContentText"
+        content.Size = UDim2.new(1, 0, 0.6, 0)
+        content.Text = tab.Content
+        content.Font = Enum.Font.SourceSans
+        content.TextSize = 14
+        content.TextColor3 = colors.text
+        content.TextXAlignment = Enum.TextXAlignment.Left
+        content.TextYAlignment = Enum.TextYAlignment.Top
+        content.BackgroundTransparency = 1
+        content.TextWrapped = true
+        content.ZIndex = 1
+        content.Parent = leftPanel
+        
+        local discordButton = createButton(leftPanel, "Join Our Discord", UDim2.new(0, 0, 0.65, 0), UDim2.new(1, 0, 0, 30))
+        discordButton.BackgroundColor3 = colors.tabActive
+        discordButton.TextColor3 = colors.textActive
+
+        discordButton.MouseButton1Click:Connect(function()
+            setclipboard("https://discord.gg/Xnbqjykptz")
+            game.StarterGui:SetCore("SendNotification", {
+                Title = "Discord Link Copied!",
+                Text = "The invite link has been copied to your clipboard",
+                Duration = 3
+            })
+        end)
+
+        local youtubeButton = createButton(leftPanel, "Subscribe to my YouTube", UDim2.new(0, 0, 0.65, 35), UDim2.new(1, 0, 0, 30))
+        youtubeButton.BackgroundColor3 = Color3.fromRGB(255, 0, 0)
+        youtubeButton.TextColor3 = Color3.new(1, 1, 1)
+
+        youtubeButton.MouseButton1Click:Connect(function()
+            setclipboard("https://www.youtube.com/@madmoneydistro")
+            game.StarterGui:SetCore("SendNotification", {
+                Title = "YouTube Link Copied!",
+                Text = "Channel link copied to clipboard",
+                Duration = 3
+            })
+        end)
+        
+       -- UI setup (same as before)
+local rightPanel = Instance.new("Frame")
+rightPanel.Name = "RightPanel"
+rightPanel.Size = UDim2.new(0.4, -10, 1, -20)
+rightPanel.Position = UDim2.new(0.6, 0, 0, 10)
+rightPanel.BackgroundColor3 = colors.statsBg
+rightPanel.ZIndex = 1
+Instance.new("UICorner", rightPanel).CornerRadius = UDim.new(0, 6)
+rightPanel.Parent = contentContainer
+
+local fpsLabel = Instance.new("TextLabel")
+fpsLabel.Name = "FPSLabel"
+fpsLabel.Size = UDim2.new(1, -10, 0, 20)
+fpsLabel.Position = UDim2.new(0, 10, 0, 10)
+fpsLabel.Text = "FPS: --"
+fpsLabel.Font = Enum.Font.SourceSansSemibold
+fpsLabel.TextSize = 14
+fpsLabel.TextColor3 = colors.text
+fpsLabel.BackgroundTransparency = 1
+fpsLabel.ZIndex = 2
+fpsLabel.Parent = rightPanel
+
+local pingLabel = Instance.new("TextLabel")
+pingLabel.Name = "PingLabel"
+pingLabel.Size = UDim2.new(1, -10, 0, 20)
+pingLabel.Position = UDim2.new(0, 10, 0, 40)
+pingLabel.Text = "Ping: -- ms"
+pingLabel.Font = Enum.Font.SourceSansSemibold
+pingLabel.TextSize = 14
+pingLabel.TextColor3 = colors.text
+pingLabel.BackgroundTransparency = 1
+pingLabel.ZIndex = 2
+pingLabel.Parent = rightPanel
+
+local executorLabel = Instance.new("TextLabel")
+executorLabel.Name = "ExecutorLabel"
+executorLabel.Size = UDim2.new(1, -10, 0, 20)
+executorLabel.Position = UDim2.new(0, 10, 0, 70)
+executorLabel.Text = "Executor: Detecting..."
+executorLabel.Font = Enum.Font.SourceSansSemibold
+executorLabel.TextSize = 14
+executorLabel.TextColor3 = colors.text
+executorLabel.BackgroundTransparency = 1
+executorLabel.ZIndex = 2
+executorLabel.Parent = rightPanel
+
+-- FPS + Ping Updates
+local RunService = game:GetService("RunService")
+local StatsService = game:GetService("Stats")
+
+local frameCount = 0
+local lastUpdate = time()
+
+RunService.Heartbeat:Connect(function()
+    frameCount += 1
+    local currentTime = time()
+
+    if currentTime - lastUpdate >= 1 then
+        local fps = math.floor(frameCount / (currentTime - lastUpdate))
+        fpsLabel.Text = "FPS: " .. fps
+        frameCount = 0
+        lastUpdate = currentTime
+    end
+end)
+
+task.spawn(function()
+    while true do
+        local success, ping = pcall(function()
+            return math.floor(StatsService.Network.ServerStatsItem["Data Ping"]:GetValue())
+        end)
+        pingLabel.Text = "Ping: " .. (success and ping or "--") .. "ms"
+        wait(1)
+    end
+end)
+
+-- Extended Executor Detection
+local function detectExecutor()
+    local execList = {
+        {check = identifyexecutor, name = identifyexecutor and identifyexecutor() or nil},
+        {check = getexecutor, name = getexecutor and getexecutor() or nil},
+        {check = KRNL_LOADED, name = "KRNL"},
+        {check = syn and syn.protect_gui, name = "Synapse X"},
+        {check = is_sirhurt_closure, name = "SirHurt"},
+        {check = secure_load, name = "ScriptWare"},
+        {check = pebc_execute, name = "Zenith"},
+        {check = SWIFT_LOADED, name = "Swift"},
+        {check = iswave, name = "Wave"},
+        {check = MACSPLOIT_LOADED, name = "Macsploit"},
+        {check = AWP_LOADED or _G.AWPEXECUTOR, name = "AWP"},
+        {check = CODEX_LOADED, name = "Codex"},
+        {check = cryptic, name = "Cryptic"},
+        {check = XENO_LOADED, name = "Xeno"},
+        {check = solara, name = "Solara"},
+        {check = isdelta or DELTA_LOADED, name = "Delta"},
+        {check = velocity, name = "Velocity"},
+        {check = jjsploit, name = "JJSploit"},
+        {check = APPLEWARE_LOADED, name = "Apple-Ware"},
+        {check = ronix, name = "Ronix"},
+        {check = nezur, name = "Nezur"},
+        {check = ARGON_LOADED, name = "Argon"},
+        {check = ember, name = "Ember"},
+    }
+
+    for _, exec in ipairs(execList) do
+        if exec.check then
+            return exec.name or "Custom Executor"
+        end
+    end
+
+    return "Unknown"
+end
+
+executorLabel.Text = "Executor: " .. detectExecutor()
+
+        
+elseif tab.Name == "Main" then
+    local scrollFrame = Instance.new("ScrollingFrame")
+    scrollFrame.Name = "ButtonScrollFrame"
+    scrollFrame.Size = UDim2.new(1, 0, 1, 0)
+    scrollFrame.BackgroundTransparency = 1
+    scrollFrame.ScrollBarThickness = 6
+    scrollFrame.ScrollBarImageColor3 = colors.text
+    scrollFrame.ZIndex = 1
+    scrollFrame.Parent = contentContainer
+
+    local mainContainer = Instance.new("Frame")
+    mainContainer.Name = "MainContainer"
+    mainContainer.Size = UDim2.new(1, 0, 1, 0)
+    mainContainer.BackgroundTransparency = 1
+    mainContainer.Parent = scrollFrame
+
+    local layout = Instance.new("UIListLayout")
+    layout.Padding = UDim.new(0, 10)
+    layout.Parent = mainContainer
+
+    local padding = Instance.new("UIPadding")
+    padding.PaddingTop = UDim.new(0, 5)
+    padding.PaddingBottom = UDim.new(0, 5)
+    padding.PaddingLeft = UDim.new(0, 5)
+    padding.PaddingRight = UDim.new(0, 5)
+    padding.Parent = mainContainer
+
+    -- Feature Buttons --
+    local buttonNames = {
+        {Name = "Infinite Yield", Action = function()
+            loadstring(game:HttpGet("https://raw.githubusercontent.com/EdgeIY/infiniteyield/master/source"))()
+        end},
+        {Name = "Infinite Jump", Action = function(self)
+            infiniteJumpEnabled = not infiniteJumpEnabled
+            self.BackgroundColor3 = infiniteJumpEnabled and colors.tabActive or colors.buttonBg
+            if infiniteJumpEnabled then
+                infiniteJump()
+            end
+        end},
+        {Name = "Noclip", Action = function(self)
+            noclipEnabled = not noclipEnabled
+            self.BackgroundColor3 = noclipEnabled and colors.tabActive or colors.buttonBg
+            noclip()
+        end},
+        {Name = "Guard ESP", Action = function(self)
+            loadstring(game:HttpGet("https://pastebin.com/raw/hbeFNg82"))()
+            self.BackgroundColor3 = colors.tabActive
+            wait(0.2)
+            self.BackgroundColor3 = colors.buttonBg
+        end},
+        {Name = "TP TO VAN", Action = function(self)
+            loadstring(game:HttpGet("https://pastebin.com/raw/yApLGMFL"))()
+            self.BackgroundColor3 = colors.tabActive
+            wait(0.2)
+            self.BackgroundColor3 = colors.buttonBg
+        end},
+        {Name = "Walkspeed Bypass", Action = function(self)
+            loadstring(game:HttpGet("https://raw.githubusercontent.com/MADMONEYDISTRO/madmoney-ghost-client/refs/heads/main/ws%20bypass"))()
+            self.BackgroundColor3 = colors.tabActive
+            wait(0.2)
+            self.BackgroundColor3 = colors.buttonBg
+        end},
+        -- Add Sample Buttons Below
+        {Name = "Shader GUI", Action = function(self)
+        self.BackgroundColor3 = colors.tabActive
+        loadstring(game:HttpGet("https://raw.githubusercontent.com/MADMONEYDISTRO/madmoney-ghost-client/refs/heads/main/shader%20function"))()
+        wait(0.2)
+        self.BackgroundColor3 = colors.buttonBg
+    end},
+        {Name = "kill all (test)", Action = function(self)
+            self.BackgroundColor3 = colors.tabActive
+            loadstring(game:HttpGet("https://raw.githubusercontent.com/MADMONEYDISTRO/madmoney-ghost-client/refs/heads/main/dsadasdadsa"))()
+            wait(0.2)
+            self.BackgroundColor3 = colors.buttonBg
+        end},
+        {Name = "blatent gui", Action = function(self)
+            self.BackgroundColor3 = colors.tabActive
+        loadstring(game:HttpGet("https://raw.githubusercontent.com/MADMONEYDISTRO/madmoney-ghost-client/refs/heads/main/blatent%20GUI"))()
+            wait(0.2)
+            self.BackgroundColor3 = colors.buttonBg
+        end}
+    }
+
+    -- Create buttons
+    for _, buttonInfo in ipairs(buttonNames) do
+        local button = createButton(mainContainer, buttonInfo.Name, UDim2.new(0, 0, 0, 0), UDim2.new(1, -10, 0, 40))
+        button.MouseButton1Click:Connect(function()
+            buttonInfo.Action(button)
+        end)
+    end
+
+    -- Setup scrolling
+    layout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
+        mainContainer.Size = UDim2.new(1, 0, 0, layout.AbsoluteContentSize.Y)
+        scrollFrame.CanvasSize = UDim2.new(0, 0, 0, layout.AbsoluteContentSize.Y + 10) -- Added extra padding
+    end)
+        
+    elseif tab.Name == "Settings" then
+        local scrollFrame = Instance.new("ScrollingFrame")
+        scrollFrame.Size = UDim2.new(1, 0, 1, 0)
+        scrollFrame.ScrollBarThickness = 6
+        scrollFrame.Parent = contentContainer
+        
+        local settingsContainer = Instance.new("Frame")
+        settingsContainer.Size = UDim2.new(1, -10, 0, 200)
+        settingsContainer.Position = UDim2.new(0, 5, 0, 5)
+        settingsContainer.BackgroundTransparency = 1
+        settingsContainer.Parent = scrollFrame
+        
+        local layout = Instance.new("UIListLayout")
+        layout.Padding = UDim.new(0, 10)
+        layout.Parent = settingsContainer
+        
+        local function createToggle(labelText, defaultState)
+            local toggleFrame = Instance.new("Frame")
+            toggleFrame.Size = UDim2.new(1, 0, 0, 30)
+            toggleFrame.BackgroundTransparency = 1
+            
+            local label = Instance.new("TextLabel")
+            label.Text = labelText
+            label.Font = Enum.Font.SourceSansSemibold
+            label.TextSize = 14
+            label.TextColor3 = colors.text
+            label.Size = UDim2.new(0.7, 0, 1, 0)
+            label.BackgroundTransparency = 1
+            label.Parent = toggleFrame
+            
+            local toggleButton = Instance.new("TextButton")
+            toggleButton.Size = UDim2.new(0, 50, 0, 25)
+            toggleButton.Position = UDim2.new(1, -50, 0, 2)
+            toggleButton.Text = ""
+            toggleButton.BackgroundColor3 = colors.buttonBg
+            Instance.new("UICorner", toggleButton).CornerRadius = UDim.new(0, 12)
+            
+            local toggleCircle = Instance.new("Frame")
+            toggleCircle.Size = UDim2.new(0, 21, 0, 21)
+            toggleCircle.Position = UDim2.new(0, 2, 0, 2)
+            toggleCircle.BackgroundColor3 = colors.text
+            Instance.new("UICorner", toggleCircle).CornerRadius = UDim.new(1, 0)
+            toggleCircle.Parent = toggleButton
+            
+            local state = defaultState
+            local function updateToggle()
+                if state then
+                    game:GetService("TweenService"):Create(toggleCircle, TweenInfo.new(0.2), {
+                        Position = UDim2.new(0, 27, 0, 2),
+                        BackgroundColor3 = colors.tabActive
+                    }):Play()
+                    toggleButton.BackgroundColor3 = colors.tabActive
+                else
+                    game:GetService("TweenService"):Create(toggleCircle, TweenInfo.new(0.2), {
+                        Position = UDim2.new(0, 2, 0, 2),
+                        BackgroundColor3 = colors.text
+                    }):Play()
+                    toggleButton.BackgroundColor3 = colors.buttonBg
+                end
+            end
+            
+            toggleButton.MouseButton1Click:Connect(function()
+                state = not state
+                updateToggle()
+            end)
+            
+            updateToggle()
+            toggleButton.Parent = toggleFrame
+            toggleFrame.Parent = settingsContainer
+            return {Frame = toggleFrame, GetState = function() return state end}
+        end
+
+        createToggle("Auto-Save Config", true)
+        createToggle("Show Notifications", true)
+        createToggle("Fullbright", false)
+        createToggle("Performance Mode", false)
+        
+        local saveButton = createButton(settingsContainer, "Save Configuration", UDim2.new(0, 0, 0, 0), UDim2.new(1, 0, 0, 30))
+        saveButton.Position = UDim2.new(0, 0, 0, 150)
+        
+        local loadButton = createButton(settingsContainer, "Load Configuration", UDim2.new(0, 0, 0, 0), UDim2.new(1, 0, 0, 30))
+        loadButton.Position = UDim2.new(0, 0, 0, 190)
+        
+    elseif tab.Name == "Themes" then
+        local scrollFrame = Instance.new("ScrollingFrame")
+        scrollFrame.Size = UDim2.new(1, 0, 1, 0)
+        scrollFrame.ScrollBarThickness = 6
+        scrollFrame.Parent = contentContainer
+        
+        local themeContainer = Instance.new("Frame")
+        themeContainer.Size = UDim2.new(1, -10, 0, 0)
+        themeContainer.Position = UDim2.new(0, 5, 0, 5)
+        themeContainer.BackgroundTransparency = 1
+        themeContainer.Parent = scrollFrame
+        
+        local layout = Instance.new("UIListLayout")
+        layout.Padding = UDim.new(0, 10)
+        layout.Parent = themeContainer
+        
+        local themes = {"Dark", "Light", "MidnightBlue", "Cyberpunk", "ForestGreen"}
+        
+        for _, themeName in ipairs(themes) do
+            local themeButton = createButton(themeContainer, themeName, UDim2.new(0, 0, 0, 0), UDim2.new(1, -10, 0, 40))
+            themeButton.BackgroundColor3 = colorSchemes[themeName].tabActive
+            themeButton.TextColor3 = colorSchemes[themeName].textActive
+            
+            themeButton.MouseButton1Click:Connect(function()
+                switchTheme(themeName)
+            end)
+        end
+        
+        layout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
+            scrollFrame.CanvasSize = UDim2.new(0, 0, 0, layout.AbsoluteContentSize.Y + 20)
+        end)
+    end
+    
+    tabContents[i] = contentContainer
+    tabButtonsList[i] = tabButton
+    
+    tabButton.MouseEnter:Connect(function()
+        if tabButton.BackgroundColor3 ~= colors.tabActive then
+            game:GetService("TweenService"):Create(tabButton, TweenInfo.new(0.15), {BackgroundColor3 = Color3.fromRGB(60, 60, 60)}):Play()
+        end
+    end)
+    
+    tabButton.MouseLeave:Connect(function()
+        if tabButton.BackgroundColor3 ~= colors.tabActive then
+            game:GetService("TweenService"):Create(tabButton, TweenInfo.new(0.15), {BackgroundColor3 = colors.tabInactive}):Play()
+        end
+    end)
+    
+    tabButton.MouseButton1Click:Connect(function()
+        for _, c in ipairs(tabContents) do c.Visible = false end
+        contentContainer.Visible = true
+        
+        for _, btn in ipairs(tabButtonsList) do
+            if btn ~= tabButton then
+                game:GetService("TweenService"):Create(btn, TweenInfo.new(0.2), {
+                    BackgroundColor3 = colors.tabInactive,
+                    TextColor3 = colors.text
+                }):Play()
+            end
+        end
+        
+        game:GetService("TweenService"):Create(tabButton, TweenInfo.new(0.2), {
+            BackgroundColor3 = colors.tabActive,
+            TextColor3 = colors.textActive
+        }):Play()
+    end)
+end
+
+local closeButton = Instance.new("ImageButton")
+closeButton.Name = "CloseButton"
+closeButton.Size = UDim2.new(0, 24, 0, 24)
+closeButton.Position = UDim2.new(1, -32, 0, 3)
+closeButton.Image = "rbxassetid://3926305904"
+closeButton.ImageRectOffset = Vector2.new(284, 4)
+closeButton.ImageRectSize = Vector2.new(24, 24)
+closeButton.BackgroundTransparency = 1
+closeButton.ZIndex = 3
+closeButton.Parent = dragBar
+
+closeButton.MouseEnter:Connect(function()
+    game:GetService("TweenService"):Create(closeButton, TweenInfo.new(0.15), {ImageColor3 = Color3.fromRGB(220, 0, 0)}):Play()
+end)
+
+closeButton.MouseLeave:Connect(function()
+    game:GetService("TweenService"):Create(closeButton, TweenInfo.new(0.15), {ImageColor3 = Color3.fromRGB(150, 150, 150)}):Play()
+end)
+
+closeButton.MouseButton1Click:Connect(function()
+    game:GetService("TweenService"):Create(mainFrame, TweenInfo.new(0.2), {
+        Size = UDim2.new(0, 0, 0, 0),
+        Position = UDim2.new(0.5, 0, 0.5, 0)
+    }):Play()
+    wait(0.2)
+    screenGui:Destroy()
+end)
+
+mainFrame.Size = UDim2.new(0, 0, 0, 0)
+game:GetService("TweenService"):Create(mainFrame, TweenInfo.new(0.3, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
+    Size = UDim2.new(0, 400, 0, 300)
+}):Play()
+
+closeButton.MouseButton1Click:Connect(function()
+    game:GetService("TweenService"):Create(mainFrame, TweenInfo.new(0.2), {
+        Size = UDim2.new(0, 0, 0, 0),
+        Position = UDim2.new(0.5, 0, 0.5, 0)
+    }):Play()
+    wait(0.2)
+    screenGui:Destroy()
+end)
+
+-- Enable and animate the main UI
+screenGui.Enabled = true
+mainFrame.Size = UDim2.new(0, 0, 0, 0)
+game:GetService("TweenService"):Create(mainFrame, TweenInfo.new(0.3, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
+    Size = UDim2.new(0, 400, 0, 300)
+}):Play()
+
+screenGui.Parent = playerGui
