@@ -27,6 +27,20 @@ local colorSchemes = {
         dragBar = Color3.fromRGB(40, 40, 40),
         statsBg = Color3.fromRGB(30, 30, 30)
     },
+    Voltage = {
+    background = Color3.fromRGB(20, 20, 30),
+    tabInactive = Color3.fromRGB(40, 40, 60),
+    tabActive = Color3.fromRGB(255, 225, 50),
+    text = Color3.fromRGB(255, 255, 180),
+    textActive = Color3.fromRGB(255, 255, 90),
+    border = Color3.fromRGB(90, 90, 110),
+    contentBg = Color3.fromRGB(30, 30, 45),
+    buttonBg = Color3.fromRGB(50, 50, 70),
+    buttonHover = Color3.fromRGB(255, 240, 100),
+    dragBar = Color3.fromRGB(35, 35, 50),
+    statsBg = Color3.fromRGB(25, 25, 35)
+},
+
     Lava = {
     background = Color3.fromRGB(20, 20, 20),
     tabInactive = Color3.fromRGB(40, 20, 20),
@@ -54,7 +68,7 @@ local colorSchemes = {
         dragBar = Color3.fromRGB(225, 225, 225),
         statsBg = Color3.fromRGB(245, 245, 245)
     },
-    Test = {
+    Diamond = {
     background = Color3.fromRGB(230, 240, 255),       
     tabInactive = Color3.fromRGB(200, 220, 240),       
     tabActive = Color3.fromRGB(100, 200, 255),          
@@ -81,6 +95,48 @@ local colorSchemes = {
         dragBar = Color3.fromRGB(20, 40, 60),
         statsBg = Color3.fromRGB(25, 35, 50)
     },
+    Toxic = {
+    background = Color3.fromRGB(10, 10, 10),
+    tabInactive = Color3.fromRGB(20, 20, 20),
+    tabActive = Color3.fromRGB(0, 255, 100),
+    text = Color3.fromRGB(0, 255, 100),
+    textActive = Color3.fromRGB(0, 255, 150),
+    border = Color3.fromRGB(0, 100, 50),
+    contentBg = Color3.fromRGB(15, 15, 15),
+    buttonBg = Color3.fromRGB(20, 20, 20),
+    buttonHover = Color3.fromRGB(0, 150, 75),
+    dragBar = Color3.fromRGB(15, 15, 15),
+    statsBg = Color3.fromRGB(10, 10, 10)
+},
+    Matrix = {
+    background = Color3.fromRGB(0, 0, 0),
+    tabInactive = Color3.fromRGB(15, 15, 15),
+    tabActive = Color3.fromRGB(0, 255, 70),
+    text = Color3.fromRGB(0, 255, 70),
+    textActive = Color3.fromRGB(0, 255, 120),
+    border = Color3.fromRGB(0, 80, 40),
+    contentBg = Color3.fromRGB(5, 5, 5),
+    buttonBg = Color3.fromRGB(10, 10, 10),
+    buttonHover = Color3.fromRGB(0, 120, 60),
+    dragBar = Color3.fromRGB(10, 10, 10),
+    statsBg = Color3.fromRGB(0, 0, 0)
+},
+    Nebula = {
+    background = Color3.fromRGB(15, 15, 35),
+    tabInactive = Color3.fromRGB(35, 25, 55),
+    tabActive = Color3.fromRGB(120, 80, 180),
+    text = Color3.fromRGB(200, 200, 255),
+    textActive = Color3.fromRGB(255, 130, 255),
+    border = Color3.fromRGB(80, 60, 120),
+    contentBg = Color3.fromRGB(25, 20, 40),
+    buttonBg = Color3.fromRGB(55, 30, 80),
+    buttonHover = Color3.fromRGB(100, 50, 150),
+    dragBar = Color3.fromRGB(45, 35, 65),
+    statsBg = Color3.fromRGB(30, 25, 50)
+},
+
+
+
     Cyberpunk = {
         background = Color3.fromRGB(20, 1, 35),
         tabInactive = Color3.fromRGB(50, 5, 70),
@@ -709,7 +765,7 @@ elseif tab.Name == "Main" then
         layout.Padding = UDim.new(0, 10)
         layout.Parent = themeContainer
         
-        local themes = {"Dark", "Light", "MidnightBlue", "Cyberpunk", "ForestGreen", "Lava", "Test"}
+        local themes = {"Dark", "Light", "MidnightBlue", "Cyberpunk", "ForestGreen", "Lava", "Diamond", "Nebula", "Toxic", "Voltage", "Matrix"}
         
         for _, themeName in ipairs(themes) do
             local themeButton = createButton(themeContainer, themeName, UDim2.new(0, 0, 0, 0), UDim2.new(1, -10, 0, 40))
