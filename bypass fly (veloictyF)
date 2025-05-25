@@ -1,0 +1,66 @@
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local UserInputService = game:GetService("UserInputService")
+
+local player = Players.LocalPlayer
+local character = player.Character or player.CharacterAdded:Wait()
+local hrp = character:WaitForChild("HumanoidRootPart")
+
+local flying = false
+local bodyVel = Instance.new("BodyVelocity")
+bodyVel.MaxForce = Vector3.new(1e5, 1e5, 1e5)
+bodyVel.Velocity = Vector3.zero
+bodyVel.P = 1250
+bodyVel.Name = "FlyForce"
+
+local speed = 100
+local moveDir = Vector3.zero
+
+-- Toggle flight
+UserInputService.InputBegan:Connect(function(input, processed)
+	if processed then return end
+	if input.KeyCode == Enum.KeyCode.F then
+		flying = not flying
+
+		if flying then
+			bodyVel.Parent = hrp
+		else
+			bodyVel.Parent = nil
+			bodyVel.Velocity = Vector3.zero
+		end
+	end
+end)
+
+-- Update movement direction based on inputs
+UserInputService.InputBegan:Connect(function(input)
+	if input.UserInputType == Enum.UserInputType.Keyboard then
+		if input.KeyCode == Enum.KeyCode.W then moveDir = moveDir + Vector3.new(0, 0, -1) end
+		if input.KeyCode == Enum.KeyCode.S then moveDir = moveDir + Vector3.new(0, 0, 1) end
+		if input.KeyCode == Enum.KeyCode.A then moveDir = moveDir + Vector3.new(-1, 0, 0) end
+		if input.KeyCode == Enum.KeyCode.D then moveDir = moveDir + Vector3.new(1, 0, 0) end
+		if input.KeyCode == Enum.KeyCode.Space then moveDir = moveDir + Vector3.new(0, 1, 0) end
+		if input.KeyCode == Enum.KeyCode.LeftControl then moveDir = moveDir + Vector3.new(0, -1, 0) end
+	end
+end)
+
+UserInputService.InputEnded:Connect(function(input)
+	if input.UserInputType == Enum.UserInputType.Keyboard then
+		if input.KeyCode == Enum.KeyCode.W then moveDir = moveDir - Vector3.new(0, 0, -1) end
+		if input.KeyCode == Enum.KeyCode.S then moveDir = moveDir - Vector3.new(0, 0, 1) end
+		if input.KeyCode == Enum.KeyCode.A then moveDir = moveDir - Vector3.new(-1, 0, 0) end
+		if input.KeyCode == Enum.KeyCode.D then moveDir = moveDir - Vector3.new(1, 0, 0) end
+		if input.KeyCode == Enum.KeyCode.Space then moveDir = moveDir - Vector3.new(0, 1, 0) end
+		if input.KeyCode == Enum.KeyCode.LeftControl then moveDir = moveDir - Vector3.new(0, -1, 0) end
+	end
+end)
+
+-- Flight logic
+RunService.RenderStepped:Connect(function()
+	if flying and hrp and bodyVel.Parent then
+		local camera = workspace.CurrentCamera
+		local camCF = camera.CFrame
+		local direction = (camCF:VectorToWorldSpace(moveDir)).Unit
+		if direction ~= direction then direction = Vector3.zero end
+		bodyVel.Velocity = direction * speed
+	end
+end)
