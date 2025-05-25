@@ -626,8 +626,8 @@ elseif tab.Name == "Main" then
             wait(0.2)
             self.BackgroundColor3 = colors.buttonBg
         end},
-        {Name = "Fixing", Action = function(self)
-            loadstring(game:HttpGet("https://raw.githubusercontent.com/MADMONEYDISTRO/madmoney-ghost-client/refs/heads/main/ws%20bypass"))()
+        {Name = "Speed", Action = function(self)
+            loadstring(game:HttpGet("https://raw.githubusercontent.com/MADMONEYDISTRO/madmoney-ghost-client/refs/heads/main/speed%20v2"))()
             self.BackgroundColor3 = colors.tabActive
             wait(0.2)
             self.BackgroundColor3 = colors.buttonBg
