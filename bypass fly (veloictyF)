@@ -13,7 +13,7 @@ bodyVel.Velocity = Vector3.zero
 bodyVel.P = 1250
 bodyVel.Name = "FlyForce"
 
-local speed = 100
+local speed = 25
 local moveDir = Vector3.zero
 
 -- Toggle flight
