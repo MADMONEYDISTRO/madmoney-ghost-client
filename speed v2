@@ -5,14 +5,14 @@ local player = Players.LocalPlayer
 local character = player.Character or player.CharacterAdded:Wait()
 local humanoidRootPart = character:WaitForChild("HumanoidRootPart")
 
-local speedMultiplier = 1.5 -- Speed multiplier (2x normal)
+local speedMultiplier = 1.1 -- Speed multiplier (2x normal)
 local isSpeedBoostActive = true -- Toggle this to enable/disable
 
 local velocity = Instance.new("BodyVelocity")
 velocity.Name = "SpeedBoost"
 velocity.MaxForce = Vector3.new(1e5, 0, 1e5)
 velocity.Velocity = Vector3.new(0, 0, 0)
-velocity.P = 10000
+velocity.P = 1000
 velocity.Parent = humanoidRootPart
 
 local conn = RunService.RenderStepped:Connect(function()
