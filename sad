@@ -646,7 +646,7 @@ elseif tab.Name == "Main" then
         end},
         {Name = "blatent gui", Action = function(self)
             self.BackgroundColor3 = colors.tabActive
-        loadstring(game:HttpGet("https://raw.githubusercontent.com/MADMONEYDISTRO/madmoney-ghost-client/refs/heads/main/blatent%20GUI"))()
+        loadstring(game:HttpGet("https://raw.githubusercontent.com/MADMONEYDISTRO/madmoney-ghost-client/refs/heads/main/bypass%20fly%20(veloictyF)"))()
             wait(0.2)
             self.BackgroundColor3 = colors.buttonBg
         end}
