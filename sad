@@ -221,7 +221,7 @@ contentFrame.Parent = mainFrame
 Instance.new("UICorner", contentFrame).CornerRadius = UDim.new(0, 6)
 
 local tabs = {
-    {Name = "Dashboard", Content = "Watch the world bend.\nVersion v2.0.0 \n This is a test version expect bugs."},
+    {Name = "Dashboard", Content = "Watch the world bend.\nVersion v2.0.0 \nThis is a test version expect bugs."},
     {Name = "Main", Content = "Select an action:"},
     {Name = "Settings", Content = "General Settings"},
     {Name = "Themes", Content = "UI Theme Selection"}
