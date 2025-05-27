@@ -7,60 +7,88 @@ local character = player.Character or player.CharacterAdded:Wait()
 local hrp = character:WaitForChild("HumanoidRootPart")
 
 local flying = false
-local bodyVel = Instance.new("BodyVelocity")
-bodyVel.MaxForce = Vector3.new(1e5, 1e5, 1e5)
-bodyVel.Velocity = Vector3.zero
-bodyVel.P = 1250
-bodyVel.Name = "FlyForce"
-
-local speed = 25
+local speed = 50 -- Adjust flying speed here
 local moveDir = Vector3.zero
 
--- Toggle flight
+-- Input tracking tables for smooth movement
+local keysDown = {
+    W = false,
+    A = false,
+    S = false,
+    D = false,
+    Space = false,
+    LeftControl = false,
+}
+
+-- Update moveDir based on keysDown
+local function updateMoveDir()
+    local dir = Vector3.new(0, 0, 0)
+    if keysDown.W then dir = dir + Vector3.new(0, 0, -1) end
+    if keysDown.S then dir = dir + Vector3.new(0, 0, 1) end
+    if keysDown.A then dir = dir + Vector3.new(-1, 0, 0) end
+    if keysDown.D then dir = dir + Vector3.new(1, 0, 0) end
+    if keysDown.Space then dir = dir + Vector3.new(0, 1, 0) end
+    if keysDown.LeftControl then dir = dir + Vector3.new(0, -1, 0) end
+    moveDir = dir.Unit
+    if dir.Magnitude == 0 then
+        moveDir = Vector3.new(0, 0, 0)
+    end
+end
+
+-- Toggle flying on/off with F
 UserInputService.InputBegan:Connect(function(input, processed)
-	if processed then return end
-	if input.KeyCode == Enum.KeyCode.F then
-		flying = not flying
-
-		if flying then
-			bodyVel.Parent = hrp
-		else
-			bodyVel.Parent = nil
-			bodyVel.Velocity = Vector3.zero
-		end
-	end
+    if processed then return end
+    if input.KeyCode == Enum.KeyCode.F then
+        flying = not flying
+        if flying then
+            -- Optional: Anchor HumanoidRootPart or set platform stand if needed
+            -- hrp.Anchored = false
+        else
+            -- Reset velocity when stopping fly
+            -- hrp.Anchored = false
+        end
+    end
 end)
 
--- Update movement direction based on inputs
+-- Update keysDown on input began
 UserInputService.InputBegan:Connect(function(input)
-	if input.UserInputType == Enum.UserInputType.Keyboard then
-		if input.KeyCode == Enum.KeyCode.W then moveDir = moveDir + Vector3.new(0, 0, -1) end
-		if input.KeyCode == Enum.KeyCode.S then moveDir = moveDir + Vector3.new(0, 0, 1) end
-		if input.KeyCode == Enum.KeyCode.A then moveDir = moveDir + Vector3.new(-1, 0, 0) end
-		if input.KeyCode == Enum.KeyCode.D then moveDir = moveDir + Vector3.new(1, 0, 0) end
-		if input.KeyCode == Enum.KeyCode.Space then moveDir = moveDir + Vector3.new(0, 1, 0) end
-		if input.KeyCode == Enum.KeyCode.LeftControl then moveDir = moveDir + Vector3.new(0, -1, 0) end
-	end
+    if input.UserInputType == Enum.UserInputType.Keyboard then
+        if input.KeyCode == Enum.KeyCode.W then keysDown.W = true end
+        if input.KeyCode == Enum.KeyCode.A then keysDown.A = true end
+        if input.KeyCode == Enum.KeyCode.S then keysDown.S = true end
+        if input.KeyCode == Enum.KeyCode.D then keysDown.D = true end
+        if input.KeyCode == Enum.KeyCode.Space then keysDown.Space = true end
+        if input.KeyCode == Enum.KeyCode.LeftControl then keysDown.LeftControl = true end
+        updateMoveDir()
+    end
 end)
 
+-- Update keysDown on input ended
 UserInputService.InputEnded:Connect(function(input)
-	if input.UserInputType == Enum.UserInputType.Keyboard then
-		if input.KeyCode == Enum.KeyCode.W then moveDir = moveDir - Vector3.new(0, 0, -1) end
-		if input.KeyCode == Enum.KeyCode.S then moveDir = moveDir - Vector3.new(0, 0, 1) end
-		if input.KeyCode == Enum.KeyCode.A then moveDir = moveDir - Vector3.new(-1, 0, 0) end
-		if input.KeyCode == Enum.KeyCode.D then moveDir = moveDir - Vector3.new(1, 0, 0) end
-		if input.KeyCode == Enum.KeyCode.Space then moveDir = moveDir - Vector3.new(0, 1, 0) end
-		if input.KeyCode == Enum.KeyCode.LeftControl then moveDir = moveDir - Vector3.new(0, -1, 0) end
-	end
+    if input.UserInputType == Enum.UserInputType.Keyboard then
+        if input.KeyCode == Enum.KeyCode.W then keysDown.W = false end
+        if input.KeyCode == Enum.KeyCode.A then keysDown.A = false end
+        if input.KeyCode == Enum.KeyCode.S then keysDown.S = false end
+        if input.KeyCode == Enum.KeyCode.D then keysDown.D = false end
+        if input.KeyCode == Enum.KeyCode.Space then keysDown.Space = false end
+        if input.KeyCode == Enum.KeyCode.LeftControl then keysDown.LeftControl = false end
+        updateMoveDir()
+    end
 end)
 
--- Flight logic
-RunService.RenderStepped:Connect(function()
-	if flying and hrp and bodyVel.Parent then
-		local camera = workspace.CurrentCamera
-		local camCF = camera.CFrame
-		local direction = (camCF:VectorToWorldSpace(moveDir)).Unit
-		if direction ~= direction then direction = Vector3.zero end
-		bodyVel.Velocity = direction * speed
-	end
+-- Fly movement loop
+RunService.RenderStepped:Connect(function(deltaTime)
+    if flying and hrp then
+        local camera = workspace.CurrentCamera
+        local camCF = camera.CFrame
+
+        if moveDir.Magnitude > 0 then
+            -- Move relative to camera look direction
+            local moveVector = (camCF.LookVector * moveDir.Z) + (camCF.RightVector * moveDir.X) + Vector3.new(0, moveDir.Y, 0)
+            moveVector = moveVector.Unit * speed * deltaTime
+
+            -- Update HumanoidRootPart CFrame smoothly
+            hrp.CFrame = hrp.CFrame + moveVector
+        end
+    end
 end)
