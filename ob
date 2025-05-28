@@ -6,7 +6,8 @@ local TweenService = game:GetService("TweenService")
 local whitelistedUsers = {
     [717850793] = true,
     [8552999326] = true,
-    [7639242] = true
+    [7639242] = true,
+    [8149981614] = true
 }
 
 -- Create Loading Screen UI
