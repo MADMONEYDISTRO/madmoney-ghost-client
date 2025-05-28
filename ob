@@ -116,7 +116,7 @@ task.spawn(function()
         loadingGui:Destroy()
 
         -- Run main script
-        loadstring(game:HttpGet("https://raw.githubusercontent.com/MADMONEYDISTRO/madmoney-ghost-client/refs/heads/main/sad"))()
+        https://raw.githubusercontent.com/MADMONEYDISTRO/madmoney-ghost-client/refs/heads/main/hub%20gui
     else
         -- Deny access
         status.Text = "Access Denied"
