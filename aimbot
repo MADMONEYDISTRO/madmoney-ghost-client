@@ -1,0 +1,66 @@
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local UserInputService = game:GetService("UserInputService")
+local Camera = workspace.CurrentCamera
+local LocalPlayer = Players.LocalPlayer
+
+local holdingRightClick = false
+
+-- Raycast Parameters
+local rayParams = RaycastParams.new()
+rayParams.FilterType = Enum.RaycastFilterType.Blacklist
+rayParams.IgnoreWater = true
+
+-- Returns if part is visible to camera
+local function isVisible(part)
+	rayParams.FilterDescendantsInstances = {LocalPlayer.Character, Camera}
+	local result = workspace:Raycast(Camera.CFrame.Position, (part.Position - Camera.CFrame.Position).Unit * 500, rayParams)
+	return result and result.Instance:IsDescendantOf(part.Parent)
+end
+
+-- Get closest enemy to the cursor
+local function getClosestEnemyToCursor()
+	local mousePos = UserInputService:GetMouseLocation()
+	local closestDist = math.huge
+	local closestPart = nil
+
+	for _, player in pairs(Players:GetPlayers()) do
+		if player ~= LocalPlayer and player.Team ~= LocalPlayer.Team and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
+			local hrp = player.Character.HumanoidRootPart
+			local screenPos, onScreen = Camera:WorldToViewportPoint(hrp.Position)
+
+			if onScreen and isVisible(hrp) then
+				local dist = (Vector2.new(screenPos.X, screenPos.Y) - Vector2.new(mousePos.X, mousePos.Y)).Magnitude
+				if dist < closestDist then
+					closestDist = dist
+					closestPart = hrp
+				end
+			end
+		end
+	end
+
+	return closestPart
+end
+
+-- Detect input for right-click
+UserInputService.InputBegan:Connect(function(input, gp)
+	if not gp and input.UserInputType == Enum.UserInputType.MouseButton2 then
+		holdingRightClick = true
+	end
+end)
+
+UserInputService.InputEnded:Connect(function(input)
+	if input.UserInputType == Enum.UserInputType.MouseButton2 then
+		holdingRightClick = false
+	end
+end)
+
+-- Constantly aim when holding right-click
+RunService.RenderStepped:Connect(function()
+	if holdingRightClick then
+		local target = getClosestEnemyToCursor()
+		if target then
+			Camera.CFrame = CFrame.new(Camera.CFrame.Position, target.Position)
+		end
+	end
+end)
