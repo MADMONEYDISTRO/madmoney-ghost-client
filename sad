@@ -826,7 +826,7 @@ elseif tab.Name == "Main" then
 		
 		_G.toggleFeature("Noclip", true) -- Show it in the array list
         wait(0.5)
-        _G.toggleFeature("Noclip", false) -- Remove it after 0.5 sec (or keep it true if it’s a toggle)
+        _G.toggleFeature("Noclip", true) -- Remove it after 0.5 sec (or keep it true if it’s a toggle)
         
         self.BackgroundColor3 = colors.buttonBg
     end
@@ -838,7 +838,7 @@ elseif tab.Name == "Main" then
 		loadstring(game:HttpGet("https://raw.githubusercontent.com/MADMONEYDISTRO/madmoney-ghost-client/refs/heads/main/chams%20eps"))()
 		_G.toggleFeature("ESP", true) -- Show it in the array list
         wait(0.5)
-        _G.toggleFeature("ESP", false) -- Remove it after 0.5 sec (or keep it true if it’s a toggle)
+        _G.toggleFeature("ESP", true) -- Remove it after 0.5 sec (or keep it true if it’s a toggle)
         
         self.BackgroundColor3 = colors.buttonBg
     end
@@ -851,7 +851,7 @@ elseif tab.Name == "Main" then
 		
 		_G.toggleFeature("Speed", true) -- Show it in the array list
         wait(0.5)
-        _G.toggleFeature("Speed", false) -- Remove it after 0.5 sec (or keep it true if it’s a toggle)
+        _G.toggleFeature("Speed", true) -- Remove it after 0.5 sec (or keep it true if it’s a toggle)
         
         self.BackgroundColor3 = colors.buttonBg
     end
@@ -870,11 +870,25 @@ elseif tab.Name == "Main" then
 		
 		_G.toggleFeature("Kill All", true) -- Show it in the array list
         wait(0.5)
-        _G.toggleFeature("Kill All", false) -- Remove it after 0.5 sec (or keep it true if it’s a toggle)
+        _G.toggleFeature("Kill All", true) -- Remove it after 0.5 sec (or keep it true if it’s a toggle)
         
         self.BackgroundColor3 = colors.buttonBg
     end
 },
+
+ {
+        Name = "Aimbot",
+	Action = function(self)
+		self.BackgroundColor3 = colors.tabActive
+	loadstring(game:HttpGet("https://github.com/MADMONEYDISTRO/madmoney-ghost-client/blob/main/aimbot"))()		
+		_G.toggleFeature("Aimbot", true) -- Show it in the array list
+        wait(0.5)
+        _G.toggleFeature("Aimbot", true) -- Remove it after 0.5 sec (or keep it true if it’s a toggle)
+        
+        self.BackgroundColor3 = colors.buttonBg
+    end
+},
+
         {
         Name = "FLY (F)",
 	Action = function(self)
@@ -883,7 +897,7 @@ elseif tab.Name == "Main" then
 		
 		_G.toggleFeature("FLY (F)", true) -- Show it in the array list
         wait(0.5)
-        _G.toggleFeature("FLY (F)", false) -- Remove it after 0.5 sec (or keep it true if it’s a toggle)
+        _G.toggleFeature("FLY (F)", true) -- Remove it after 0.5 sec (or keep it true if it’s a toggle)
         
         self.BackgroundColor3 = colors.buttonBg
     end
