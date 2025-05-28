@@ -808,10 +808,10 @@ elseif tab.Name == "Main" then
     -- Feature Buttons --
     local buttonNames = {
         {
-        Name = "INFyeild",
+        Name = "soon",
 	Action = function(self)
 		self.BackgroundColor3 = colors.tabActive
-		loadstring(game:HttpGet("https://raw.githubusercontent.com/EdgeIY/infiniteyield/master/source"))()
+		--loadstring(game:HttpGet(""))()
 		toggleFeature("INFyeild", true)
 		wait(0.5)
 		toggleFeature("INFyeild", false)
