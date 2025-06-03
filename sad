@@ -277,6 +277,20 @@ local colorSchemes = {
         dragBar = Color3.fromRGB(225, 225, 225),
         statsBg = Color3.fromRGB(245, 245, 245)
     },
+	Gree x = {
+    background = Color3.fromRGB(15, 20, 15),
+    tabInactive = Color3.fromRGB(25, 40, 25),
+    tabActive = Color3.fromRGB(80, 255, 100),
+    text = Color3.fromRGB(200, 240, 200),
+    textActive = Color3.fromRGB(0.9, 1, 0.9),
+    border = Color3.fromRGB(30, 60, 30),
+    contentBg = Color3.fromRGB(20, 35, 20),
+    buttonBg = Color3.fromRGB(40, 90, 40),
+    buttonHover = Color3.fromRGB(50, 130, 50),
+    dragBar = Color3.fromRGB(20, 50, 20),
+    statsBg = Color3.fromRGB(10, 25, 10)
+	},
+
     Diamond = {
     background = Color3.fromRGB(230, 240, 255),       
     tabInactive = Color3.fromRGB(200, 220, 240),       
@@ -1017,7 +1031,7 @@ elseif tab.Name == "Main" then
         layout.Padding = UDim.new(0, 10)
         layout.Parent = themeContainer
         
-        local themes = {"Dark", "Light", "MidnightBlue", "Cyberpunk", "ForestGreen", "Lava", "Diamond", "Nebula", "Toxic", "Voltage", "Matrix"}
+        local themes = {"Dark", "Light", "MidnightBlue", "Cyberpunk", "ForestGreen", "Lava", "Diamond", "Nebula", "Toxic", "Voltage", "Matrix", "Gree X"}
         
         for _, themeName in ipairs(themes) do
             local themeButton = createButton(themeContainer, themeName, UDim2.new(0, 0, 0, 0), UDim2.new(1, -10, 0, 40))
