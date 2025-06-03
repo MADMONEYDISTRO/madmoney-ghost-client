@@ -2,15 +2,16 @@ local player = game:GetService("Players").LocalPlayer
 local playerGui = player:WaitForChild("PlayerGui")
 local TweenService = game:GetService("TweenService")
 
--- Whitelist (Add allowed UserIds)
+-- Whitelist 
 local whitelistedUsers = {
     [717850793] = true,
     [8552999326] = true,
     [7639242] = true,
+    [8149981614] = true,
     [8149981614] = true
 }
 
--- Create Loading Screen UI
+
 local loadingGui = Instance.new("ScreenGui", playerGui)
 loadingGui.Name = "TrapwareLoading"
 loadingGui.ResetOnSpawn = false
@@ -63,7 +64,7 @@ progressFill.Size = UDim2.new(0, 0, 1, 0)
 progressFill.BackgroundColor3 = Color3.fromRGB(0, 170, 255)
 Instance.new("UICorner", progressFill).CornerRadius = UDim.new(1, 0)
 
--- Loading steps (feature loading text + delay)
+
 local steps = {
     {"Loading Core Functions", 1.0},
     {"Enabling UI Engine", 1.0},
@@ -73,7 +74,7 @@ local steps = {
     {"Finalizing Systems", 0.6}
 }
 
--- Run loading bar animation
+
 task.spawn(function()
     for i, step in ipairs(steps) do
         local progress = i / #steps
@@ -85,7 +86,7 @@ task.spawn(function()
         task.wait(step[2])
     end
 
-    -- Authentication check
+   
     status.Text = "Authenticating User..."
     percent.Text = "..."
     wait(1)
@@ -96,7 +97,6 @@ task.spawn(function()
         progressFill.BackgroundColor3 = Color3.fromRGB(0, 200, 100)
         wait(1)
 
-        -- Fade out loading screen
         TweenService:Create(frame, TweenInfo.new(0.4), {
             Position = UDim2.new(0.5, -200, 0.5, -60),
             BackgroundTransparency = 1
@@ -116,7 +116,7 @@ task.spawn(function()
         wait(0.5)
         loadingGui:Destroy()
 
-        -- Run main script
+        -- main 
         loadstring(game:HttpGet("https://raw.githubusercontent.com/MADMONEYDISTRO/madmoney-ghost-client/refs/heads/main/hub%20gui"))()
     else
         -- Deny access
