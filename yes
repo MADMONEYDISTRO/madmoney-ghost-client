@@ -698,7 +698,7 @@ local function createTrapwareInterface()
     statusLabel.Size = UDim2.new(0.5, 0, 1, 0)
     statusLabel.Position = UDim2.new(0.5, 0, 0, 0)
     statusLabel.BackgroundTransparency = 1
-    statusLabel.Text = "Status: Active\Undetected  🟢"
+    statusLabel.Text = "Status: Active\nUndetected  🟢"
     statusLabel.TextColor3 = CONFIG.THEME_COLOR
     statusLabel.TextSize = 10
     statusLabel.Font = Enum.Font.Gotham
