@@ -686,7 +686,7 @@ local function createTrapwareInterface()
     versionLabel.Size = UDim2.new(0.5, 0, 1, 0)
     versionLabel.Position = UDim2.new(0, 15, 0, 0)
     versionLabel.BackgroundTransparency = 1
-    versionLabel.Text = "Version: v1.2.5\nLast Updated: June 2025"
+    versionLabel.Text = "Version: v2.5\nLast Updated: June 5 2025"
     versionLabel.TextColor3 = CONFIG.ACCENT_COLOR
     versionLabel.TextSize = 10
     versionLabel.Font = Enum.Font.Gotham
@@ -698,7 +698,7 @@ local function createTrapwareInterface()
     statusLabel.Size = UDim2.new(0.5, 0, 1, 0)
     statusLabel.Position = UDim2.new(0.5, 0, 0, 0)
     statusLabel.BackgroundTransparency = 1
-    statusLabel.Text = "Status: Active\nFeatures: Loaded"
+    statusLabel.Text = "Status: Active\Undetected  🟢"
     statusLabel.TextColor3 = CONFIG.THEME_COLOR
     statusLabel.TextSize = 10
     statusLabel.Font = Enum.Font.Gotham
