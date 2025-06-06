@@ -1,8 +1,8 @@
-
 local TweenService = game:GetService("TweenService")
 local UserInputService = game:GetService("UserInputService")
 local RunService = game:GetService("RunService")
 local Players = game:GetService("Players")
+local StatsService = game:GetService("Stats")
 
 local player = Players.LocalPlayer
 local playerGui = player:WaitForChild("PlayerGui")
@@ -172,6 +172,81 @@ local FEATURES = {
     }
 }
 
+-- Table to store loadstring functions for each feature
+-- REMEMBER: USING LOADSTRING IS DANGEROUS IF THE STRING IS NOT TRUSTED
+local FEATURE_FUNCTIONS = {
+    combat = {
+        killAll = function(enabled)
+            if enabled then
+                print("Executing Kill All script via loadstring...")
+                -- Example: local func = loadstring("print('Kill All enabled logic!')")
+                -- if func then func() end
+            else
+                print("Executing Kill All disable script via loadstring...")
+                -- Example: local func = loadstring("print('Kill All disabled logic!')")
+                -- if func then func() end
+            end
+        end,
+        autoAim = function(enabled)
+            if enabled then
+                print("Executing Auto Aim script via loadstring...")
+                -- Example: local func = loadstring("print('Auto Aim enabled logic!')")
+                -- if func then func() end
+            else
+                print("Executing Auto Aim disable script via loadstring...")
+                -- Example: local func = loadstring("print('Auto Aim disabled logic!')")
+                -- if func then func() end
+            end
+        end,
+        reach = function(enabled)
+            if enabled then
+                print("Executing Reach script via loadstring...")
+                -- Example: local func = loadstring("print('Reach enabled logic!')")
+                -- if func then func() end
+            else
+                print("Executing Reach disable script via loadstring...")
+                -- Example: local func = loadstring("print('Reach disabled logic!')")
+                -- if func then func() end
+            end
+        end,
+    },
+    visual = {
+        esp = function(enabled)
+            if enabled then
+                print("Executing ESP script via loadstring...")
+                -- Example: local func = loadstring("print('ESP enabled logic!')")
+                -- if func then func() end
+            else
+                print("Executing ESP disable script via loadstring...")
+                -- Example: local func = loadstring("print('ESP disabled logic!')")
+                -- if func then func() end
+            end
+        end,
+        tracers = function(enabled)
+            if enabled then
+                print("Executing Tracers script via loadstring...")
+                -- Example: local func = loadstring("print('Tracers enabled logic!')")
+                -- if func then func() end
+            else
+                print("Executing Tracers disable script via loadstring...")
+                -- Example: local func = loadstring("print('Tracers disabled logic!')")
+                -- if func then func() end
+            end
+        end,
+        chams = function(enabled)
+            if enabled then
+                print("Executing Chams script via loadstring...")
+                -- Example: local func = loadstring("print('Chams enabled logic!')")
+                -- if func then func() end
+            else
+                print("Executing Chams disable script via loadstring...")
+                -- Example: local func = loadstring("print('Chams disabled logic!')")
+                -- if func then func() end
+            end
+        end,
+    },
+}
+
 -- Function to apply theme
 local function applyTheme(themeName, gui)
     if not THEMES[themeName] or not gui then return end
@@ -227,14 +302,19 @@ local function applyTheme(themeName, gui)
             local infoFrame = contentFrame:FindFirstChild("Frame")
             if infoFrame then
                 infoFrame.BackgroundColor3 = CONFIG.SECONDARY_COLOR
-                local versionLabel = infoFrame:FindFirstChild("TextLabel")
+                local versionLabel = infoFrame:FindFirstChild("VersionLabel")
                 if versionLabel then
                     versionLabel.TextColor3 = CONFIG.ACCENT_COLOR
                 end
-                for _, child in pairs(infoFrame:GetChildren()) do
-                    if child:IsA("TextLabel") and child.Text:find("Status:") then
-                        child.TextColor3 = CONFIG.THEME_COLOR
-                    end
+                
+                local statusLabel = infoFrame:FindFirstChild("StatusLabel")
+                if statusLabel then
+                    statusLabel.TextColor3 = CONFIG.THEME_COLOR
+                end
+                
+                local performanceLabel = infoFrame:FindFirstChild("PerformanceLabel")
+                if performanceLabel then
+                    performanceLabel.TextColor3 = CONFIG.ACCENT_COLOR
                 end
             end
         end
@@ -324,7 +404,7 @@ local function createTitleBar(parent)
     closeButton.Parent = titleBar
     
     local closeCorner = Instance.new("UICorner")
-    closeCorner.CornerRadius = UDim.new(1, 0)
+    closeCorner.CornerRadius = UDim.new(1, 0) -- This makes it a circle if the frame is square
     closeCorner.Parent = closeButton
     
     return titleBar, closeButton
@@ -360,7 +440,7 @@ local function createToggleSwitch(parent, name, position, enabled)
     switchBg.Parent = toggleFrame
     
     local switchCorner = Instance.new("UICorner")
-    switchCorner.CornerRadius = UDim.new(1, 0)
+    switchCorner.CornerRadius = UDim.new(1, 0) -- Makes it a rounded pill shape
     switchCorner.Parent = switchBg
     
     local switchKnob = Instance.new("Frame")
@@ -372,7 +452,7 @@ local function createToggleSwitch(parent, name, position, enabled)
     switchKnob.Parent = switchBg
     
     local knobCorner = Instance.new("UICorner")
-    knobCorner.CornerRadius = UDim.new(1, 0)
+    knobCorner.CornerRadius = UDim.new(1, 0) -- Makes it a circle
     knobCorner.Parent = switchKnob
     
     -- Toggle functionality
@@ -399,19 +479,37 @@ local function createToggleSwitch(parent, name, position, enabled)
         bgColorTween:Play()
         knobTween:Play()
         
-        -- Update feature state
+        -- Update feature state and execute loadstring
         if name == "Kill All" then
             FEATURES.combat.killAll = isEnabled
+            if FEATURE_FUNCTIONS.combat.killAll then
+                FEATURE_FUNCTIONS.combat.killAll(isEnabled)
+            end
         elseif name == "Auto Aim" then
             FEATURES.combat.autoAim = isEnabled
+            if FEATURE_FUNCTIONS.combat.autoAim then
+                FEATURE_FUNCTIONS.combat.autoAim(isEnabled)
+            end
         elseif name == "Reach" then
             FEATURES.combat.reach = isEnabled
+            if FEATURE_FUNCTIONS.combat.reach then
+                FEATURE_FUNCTIONS.combat.reach(isEnabled)
+            end
         elseif name == "ESP" then
             FEATURES.visual.esp = isEnabled
+            if FEATURE_FUNCTIONS.visual.esp then
+                FEATURE_FUNCTIONS.visual.esp(isEnabled)
+            end
         elseif name == "Tracers" then
             FEATURES.visual.tracers = isEnabled
+            if FEATURE_FUNCTIONS.visual.tracers then
+                FEATURE_FUNCTIONS.visual.tracers(isEnabled)
+            end
         elseif name == "Chams" then
             FEATURES.visual.chams = isEnabled
+            if FEATURE_FUNCTIONS.visual.chams then
+                FEATURE_FUNCTIONS.visual.chams(isEnabled)
+            end
         end
         
         print(name .. " " .. (isEnabled and "enabled" or "disabled"))
@@ -532,7 +630,8 @@ local function createThemeDropdown(parent, gui)
             -- Update all theme option backgrounds
             for _, option in pairs(scrollFrame:GetChildren()) do
                 if option:IsA("TextButton") then
-                    option.BackgroundColor3 = option.Text == themeName and CONFIG.THEME_COLOR or Color3.fromRGB(35, 45, 61)
+                    -- Ensure we're setting the background color based on the *new* currentTheme
+                    option.BackgroundColor3 = (option.Text == themeName) and CONFIG.THEME_COLOR or Color3.fromRGB(35, 45, 61)
                 end
             end
         end)
@@ -559,7 +658,8 @@ local function createThemeDropdown(parent, gui)
     end)
     
     -- Close dropdown when clicking elsewhere
-    UserInputService.InputBegan:Connect(function(input)
+    UserInputService.InputBegan:Connect(function(input, gameProcessed) -- Added gameProcessed parameter
+        if gameProcessed then return end -- Check if game consumed the input
         if input.UserInputType == Enum.UserInputType.MouseButton1 then
             if dropdownMenu.Visible then
                 local mouse = Players.LocalPlayer:GetMouse()
@@ -638,13 +738,16 @@ local function createTrapwareInterface()
         Color3.fromRGB(34, 197, 94),
         Color3.fromRGB(234, 179, 8)
     }
-    
+
+    local espColorButtons = {} -- Store references to the color buttons
+
     for i, color in ipairs(colors) do
         local colorButton = Instance.new("TextButton")
+        colorButton.Name = color .. "ColorButton" -- Give unique names
         colorButton.Size = UDim2.new(0, 25, 0, 25) -- Reduced size
         colorButton.Position = UDim2.new(0, 100 + (i-1) * 32, 0, 45)
         colorButton.BackgroundColor3 = colorValues[i]
-        colorButton.BorderSizePixel = FEATURES.settings.espColor == color and 2 or 0
+        colorButton.BorderSizePixel = (FEATURES.settings.espColor == color) and 2 or 0 -- Initial border
         colorButton.BorderColor3 = CONFIG.TEXT_COLOR
         colorButton.Text = ""
         colorButton.Parent = settingsSection
@@ -652,15 +755,15 @@ local function createTrapwareInterface()
         local colorCorner = Instance.new("UICorner")
         colorCorner.CornerRadius = UDim.new(1, 0)
         colorCorner.Parent = colorButton
+
+        table.insert(espColorButtons, colorButton) -- Store the button reference
         
         colorButton.MouseButton1Click:Connect(function()
             FEATURES.settings.espColor = color
             -- Update all color button borders
-            for j = 1, #colors do
-                local otherButton = settingsSection:FindFirstChild("TextButton")
-                if otherButton then
-                    otherButton.BorderSizePixel = (j == i) and 2 or 0
-                end
+            for _, otherButton in pairs(espColorButtons) do -- Iterate through stored references
+                otherButton.BorderSizePixel = (otherButton.Name:find(color)) and 2 or 0 -- Check if the button name contains the selected color
+                otherButton.BorderColor3 = CONFIG.TEXT_COLOR -- Ensure border color updates with theme
             end
             print("ESP Color changed to: " .. color)
         end)
@@ -671,8 +774,8 @@ local function createTrapwareInterface()
     
     -- Info section
     local infoFrame = Instance.new("Frame")
-    infoFrame.Size = UDim2.new(1, 0, 0, 60) -- Reduced height
-    infoFrame.Position = UDim2.new(0, 0, 1, -60)
+    infoFrame.Size = UDim2.new(1, 0, 0, 70)  -- Increased height to accommodate more info
+    infoFrame.Position = UDim2.new(0, 0, 1, -70)
     infoFrame.BackgroundColor3 = CONFIG.SECONDARY_COLOR
     infoFrame.BackgroundTransparency = 0.3
     infoFrame.BorderSizePixel = 0
@@ -682,29 +785,110 @@ local function createTrapwareInterface()
     infoCorner.CornerRadius = UDim.new(0, 8)
     infoCorner.Parent = infoFrame
     
+    -- Version info
     local versionLabel = Instance.new("TextLabel")
-    versionLabel.Size = UDim2.new(0.5, 0, 1, 0)
-    versionLabel.Position = UDim2.new(0, 15, 0, 0)
+    versionLabel.Name = "VersionLabel"
+    versionLabel.Size = UDim2.new(0.5, 0, 0.5, 0)
+    versionLabel.Position = UDim2.new(0, 15, 0, 5)
     versionLabel.BackgroundTransparency = 1
     versionLabel.Text = "Version: v2.5\nLast Updated: June 5 2025"
     versionLabel.TextColor3 = CONFIG.ACCENT_COLOR
     versionLabel.TextSize = 10
     versionLabel.Font = Enum.Font.Gotham
-    versionLabel.TextYAlignment = Enum.TextYAlignment.Center
+    versionLabel.TextYAlignment = Enum.TextYAlignment.Top
     versionLabel.TextXAlignment = Enum.TextXAlignment.Left
     versionLabel.Parent = infoFrame
     
+    -- Executor detection
+    local function detectExecutor()
+        if _G.Synapse then
+            return "Synapse X"
+        elseif identifyexecutor and identifyexecutor() == "ScriptWare" then
+            return "ScriptWare"
+        elseif KRNL_LOADED then
+            return "Krnl"
+        elseif fluxus then
+            return "Fluxus"
+        elseif PROTOSMASHER_LOADED then
+            return "ProtoSmasher"
+        elseif isexecutorclosure then
+            return "Electron"
+        elseif getexecutorname then
+            return getexecutorname()
+        else
+            return "Unknown"
+        end
+    end
+    
+    local executorName = detectExecutor()
+    print("Detected executor: " .. executorName)
+    
+    -- Status label with executor and status
     local statusLabel = Instance.new("TextLabel")
-    statusLabel.Size = UDim2.new(0.5, 0, 1, 0)
-    statusLabel.Position = UDim2.new(0.5, 0, 0, 0)
+    statusLabel.Name = "StatusLabel"
+    statusLabel.Size = UDim2.new(0.5, 0, 0.5, 0)
+    statusLabel.Position = UDim2.new(0.5, 0, 0, 5)
     statusLabel.BackgroundTransparency = 1
-    statusLabel.Text = "Status: Active\n Undetected🟢"
+    statusLabel.Text = "Executor: "..executorName.."\nStatus: Active 🟢"
     statusLabel.TextColor3 = CONFIG.THEME_COLOR
     statusLabel.TextSize = 10
     statusLabel.Font = Enum.Font.Gotham
-    statusLabel.TextYAlignment = Enum.TextYAlignment.Center
+    statusLabel.TextYAlignment = Enum.TextYAlignment.Top
     statusLabel.TextXAlignment = Enum.TextXAlignment.Right
     statusLabel.Parent = infoFrame
+    
+    -- Performance counters
+    local performanceLabel = Instance.new("TextLabel")
+    performanceLabel.Name = "PerformanceLabel"
+    performanceLabel.Size = UDim2.new(1, -30, 0.5, 0)
+    performanceLabel.Position = UDim2.new(0, 15, 0.5, 0)
+    performanceLabel.BackgroundTransparency = 1
+    performanceLabel.Text = "Ping: ... | FPS: ..."
+    performanceLabel.TextColor3 = CONFIG.ACCENT_COLOR
+    performanceLabel.TextSize = 10
+    performanceLabel.Font = Enum.Font.Gotham
+    performanceLabel.TextXAlignment = Enum.TextXAlignment.Left
+    performanceLabel.Parent = infoFrame
+    
+    -- FPS counter
+    local fps = 0
+    local frameCount = 0
+    local lastUpdate = tick()
+    
+    RunService.RenderStepped:Connect(function()
+        frameCount = frameCount + 1
+        local now = tick()
+        if now - lastUpdate >= 1 then
+            fps = frameCount
+            frameCount = 0
+            lastUpdate = now
+        end
+    end)
+    
+    -- Ping counter
+    spawn(function()
+        while wait(1) do
+            if not (screenGui and screenGui.Parent) then break end
+            
+            local ping = "N/A"
+            local stats = game:GetService("Stats")
+            if stats then
+                local network = stats.Network
+                if network then
+                    local pingStat = network:FindFirstChild("ServerStatsItem")
+                    if pingStat then
+                        pingStat = pingStat:FindFirstChild("Data Ping")
+                        if pingStat then
+                            ping = pingStat:GetValue()
+                            ping = math.floor(ping)
+                        end
+                    end
+                end
+            end
+            
+            performanceLabel.Text = string.format("Ping: %d ms | FPS: %d", ping, fps)
+        end
+    end)
     
     print("Trapware Interface v1.2.5 loaded successfully!")
     return screenGui
