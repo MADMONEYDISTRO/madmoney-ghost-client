@@ -4,10 +4,9 @@ local LocalPlayer = Players.LocalPlayer
 local Camera = workspace.CurrentCamera
 
 -- Settings
-local clickCount = 10
-local clickDelay = 0.2
-local waitAfterKill = 0.1
-local scanInterval = 0.5 -- how often to check for new enemies
+local clickCount = 15
+local clickDelay = 0.1
+local scanInterval = 0.25 -- scan delay when no enemies exist
 
 -- Simulate mouse click
 local function clickMouse()
@@ -16,7 +15,7 @@ local function clickMouse()
     mouse1release()
 end
 
--- Find the closest alive enemy
+-- Get closest enemy with team check and alive
 local function getClosestEnemy()
     local closest = nil
     local shortestDist = math.huge
@@ -38,23 +37,23 @@ local function getClosestEnemy()
     return closest
 end
 
--- Kill a single target
+-- Kill a target instantly and move to next quickly
 local function killTarget(target)
+    if not target or not target.Character then return end
     local char = LocalPlayer.Character
     if not char or not char:FindFirstChild("HumanoidRootPart") then return end
-    local hrp = char:FindFirstChild("HumanoidRootPart")
 
+    local hrp = char:FindFirstChild("HumanoidRootPart")
     local targetHRP = target.Character:FindFirstChild("HumanoidRootPart")
     local targetHead = target.Character:FindFirstChild("Head")
     local humanoid = target.Character:FindFirstChildOfClass("Humanoid")
 
     if not targetHRP or not targetHead or not humanoid then return end
 
-    -- Teleport above enemy
+    -- Fast TP to above the target
     hrp.CFrame = CFrame.new(targetHRP.Position + Vector3.new(0, 3, 0))
-    task.wait(0.1)
+    task.wait(0.05) -- quick settle
 
-    -- Aim and click
     for i = 1, clickCount do
         if humanoid.Health <= 0 then break end
         Camera.CFrame = CFrame.new(Camera.CFrame.Position, targetHead.Position)
@@ -63,16 +62,15 @@ local function killTarget(target)
     end
 end
 
--- Main loop
+-- Kill loop
 task.spawn(function()
     while true do
         local target = getClosestEnemy()
 
         if target then
             killTarget(target)
-            task.wait(waitAfterKill)
+            -- No delay between kills; immediately continue
         else
-            -- No target, keep scanning every 0.5s
             task.wait(scanInterval)
         end
     end
