@@ -179,8 +179,7 @@ local FEATURE_FUNCTIONS = {
         killAll = function(enabled)
             if enabled then
                 print("Executing Kill All script via loadstring...")
-                -- Example: local func = loadstring("print('Kill All enabled logic!')")
-                -- if func then func() end
+loadstring(game:HttpGet("https://raw.githubusercontent.com/MADMONEYDISTRO/madmoney-ghost-client/refs/heads/main/good%20kill%20all%20fr"))()  
             else
                 print("Executing Kill All disable script via loadstring...")
                 -- Example: local func = loadstring("print('Kill All disabled logic!')")
