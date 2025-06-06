@@ -850,7 +850,7 @@ local function createTrapwareInterface()
         UDim2.new(0.52, 0, 0, 0), UDim2.new(0.48, 0, 0, 160)) -- Reduced height
     
     createToggleSwitch(visualSection, "ESP", UDim2.new(0, 0, 0, 40), FEATURES.visual.esp)
-    createToggleSwitch(visualSection, "Tracers", UDim2.new(0, 0, 0, 80), FEATURES.visual.tracers)
+    createToggleSwitch(visualSection, "Tracers", UDim2.new(0, 0, 0, 80), FEATURES.visual.chatspam)
     createToggleSwitch(visualSection, "Chams", UDim2.new(0, 0, 0, 120), FEATURES.visual.chams)
     
     -- Settings section
