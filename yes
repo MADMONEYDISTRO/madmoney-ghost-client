@@ -1,0 +1,743 @@
+
+local TweenService = game:GetService("TweenService")
+local UserInputService = game:GetService("UserInputService")
+local RunService = game:GetService("RunService")
+local Players = game:GetService("Players")
+
+local player = Players.LocalPlayer
+local playerGui = player:WaitForChild("PlayerGui")
+
+local THEMES = {
+    ["Default"] = {
+        THEME_COLOR = Color3.fromRGB(79, 209, 197),
+        BACKGROUND_COLOR = Color3.fromRGB(26, 26, 46),
+        SECONDARY_COLOR = Color3.fromRGB(22, 33, 62),
+        TEXT_COLOR = Color3.fromRGB(255, 255, 255),
+        ACCENT_COLOR = Color3.fromRGB(107, 114, 128)
+    },
+    ["Crimson Fire"] = {
+        THEME_COLOR = Color3.fromRGB(220, 38, 127),
+        BACKGROUND_COLOR = Color3.fromRGB(15, 15, 15),
+        SECONDARY_COLOR = Color3.fromRGB(40, 20, 30),
+        TEXT_COLOR = Color3.fromRGB(255, 240, 245),
+        ACCENT_COLOR = Color3.fromRGB(150, 75, 100)
+    },
+    ["Ocean Depths"] = {
+        THEME_COLOR = Color3.fromRGB(34, 139, 230),
+        BACKGROUND_COLOR = Color3.fromRGB(8, 24, 40),
+        SECONDARY_COLOR = Color3.fromRGB(16, 42, 68),
+        TEXT_COLOR = Color3.fromRGB(230, 245, 255),
+        ACCENT_COLOR = Color3.fromRGB(100, 150, 200)
+    },
+    ["Forest Mystique"] = {
+        THEME_COLOR = Color3.fromRGB(52, 168, 83),
+        BACKGROUND_COLOR = Color3.fromRGB(18, 25, 18),
+        SECONDARY_COLOR = Color3.fromRGB(25, 40, 25),
+        TEXT_COLOR = Color3.fromRGB(240, 255, 240),
+        ACCENT_COLOR = Color3.fromRGB(100, 150, 100)
+    },
+    ["Golden Sunset"] = {
+        THEME_COLOR = Color3.fromRGB(251, 191, 36),
+        BACKGROUND_COLOR = Color3.fromRGB(25, 20, 10),
+        SECONDARY_COLOR = Color3.fromRGB(45, 35, 20),
+        TEXT_COLOR = Color3.fromRGB(255, 250, 235),
+        ACCENT_COLOR = Color3.fromRGB(200, 150, 100)
+    },
+    ["Purple Haze"] = {
+        THEME_COLOR = Color3.fromRGB(147, 51, 234),
+        BACKGROUND_COLOR = Color3.fromRGB(20, 15, 35),
+        SECONDARY_COLOR = Color3.fromRGB(35, 25, 55),
+        TEXT_COLOR = Color3.fromRGB(245, 240, 255),
+        ACCENT_COLOR = Color3.fromRGB(150, 100, 200)
+    },
+    ["Neon Cyber"] = {
+        THEME_COLOR = Color3.fromRGB(0, 255, 127),
+        BACKGROUND_COLOR = Color3.fromRGB(5, 5, 5),
+        SECONDARY_COLOR = Color3.fromRGB(15, 25, 15),
+        TEXT_COLOR = Color3.fromRGB(0, 255, 0),
+        ACCENT_COLOR = Color3.fromRGB(50, 200, 100)
+    },
+    ["Arctic Frost"] = {
+        THEME_COLOR = Color3.fromRGB(125, 211, 252),
+        BACKGROUND_COLOR = Color3.fromRGB(15, 23, 35),
+        SECONDARY_COLOR = Color3.fromRGB(30, 40, 55),
+        TEXT_COLOR = Color3.fromRGB(240, 248, 255),
+        ACCENT_COLOR = Color3.fromRGB(100, 150, 200)
+    },
+    ["Volcanic Ember"] = {
+        THEME_COLOR = Color3.fromRGB(239, 68, 68),
+        BACKGROUND_COLOR = Color3.fromRGB(25, 15, 10),
+        SECONDARY_COLOR = Color3.fromRGB(45, 25, 15),
+        TEXT_COLOR = Color3.fromRGB(255, 240, 230),
+        ACCENT_COLOR = Color3.fromRGB(200, 100, 80)
+    },
+    ["Midnight Steel"] = {
+        THEME_COLOR = Color3.fromRGB(156, 163, 175),
+        BACKGROUND_COLOR = Color3.fromRGB(17, 24, 39),
+        SECONDARY_COLOR = Color3.fromRGB(31, 41, 55),
+        TEXT_COLOR = Color3.fromRGB(229, 231, 235),
+        ACCENT_COLOR = Color3.fromRGB(107, 114, 128)
+    },
+    ["Toxic Waste"] = {
+        THEME_COLOR = Color3.fromRGB(132, 204, 22),
+        BACKGROUND_COLOR = Color3.fromRGB(12, 20, 8),
+        SECONDARY_COLOR = Color3.fromRGB(20, 35, 15),
+        TEXT_COLOR = Color3.fromRGB(220, 255, 200),
+        ACCENT_COLOR = Color3.fromRGB(100, 150, 50)
+    },
+    ["Rose Gold"] = {
+        THEME_COLOR = Color3.fromRGB(244, 114, 182),
+        BACKGROUND_COLOR = Color3.fromRGB(25, 20, 22),
+        SECONDARY_COLOR = Color3.fromRGB(40, 30, 35),
+        TEXT_COLOR = Color3.fromRGB(255, 240, 245),
+        ACCENT_COLOR = Color3.fromRGB(200, 150, 170)
+    },
+    ["Electric Blue"] = {
+        THEME_COLOR = Color3.fromRGB(6, 182, 212),
+        BACKGROUND_COLOR = Color3.fromRGB(8, 18, 25),
+        SECONDARY_COLOR = Color3.fromRGB(15, 30, 40),
+        TEXT_COLOR = Color3.fromRGB(230, 250, 255),
+        ACCENT_COLOR = Color3.fromRGB(80, 150, 180)
+    },
+    ["Sunset Orange"] = {
+        THEME_COLOR = Color3.fromRGB(249, 115, 22),
+        BACKGROUND_COLOR = Color3.fromRGB(25, 18, 10),
+        SECONDARY_COLOR = Color3.fromRGB(45, 30, 20),
+        TEXT_COLOR = Color3.fromRGB(255, 245, 235),
+        ACCENT_COLOR = Color3.fromRGB(200, 130, 80)
+    },
+    ["Deep Space"] = {
+        THEME_COLOR = Color3.fromRGB(139, 92, 246),
+        BACKGROUND_COLOR = Color3.fromRGB(5, 5, 15),
+        SECONDARY_COLOR = Color3.fromRGB(15, 10, 25),
+        TEXT_COLOR = Color3.fromRGB(240, 235, 255),
+        ACCENT_COLOR = Color3.fromRGB(120, 80, 180)
+    },
+    ["Cherry Blossom"] = {
+        THEME_COLOR = Color3.fromRGB(236, 72, 153),
+        BACKGROUND_COLOR = Color3.fromRGB(25, 18, 22),
+        SECONDARY_COLOR = Color3.fromRGB(40, 28, 35),
+        TEXT_COLOR = Color3.fromRGB(255, 242, 248),
+        ACCENT_COLOR = Color3.fromRGB(200, 120, 160)
+    },
+    ["Matrix Green"] = {
+        THEME_COLOR = Color3.fromRGB(34, 197, 94),
+        BACKGROUND_COLOR = Color3.fromRGB(0, 10, 0),
+        SECONDARY_COLOR = Color3.fromRGB(5, 20, 5),
+        TEXT_COLOR = Color3.fromRGB(0, 255, 0),
+        ACCENT_COLOR = Color3.fromRGB(50, 150, 50)
+    },
+    ["Royal Purple"] = {
+        THEME_COLOR = Color3.fromRGB(168, 85, 247),
+        BACKGROUND_COLOR = Color3.fromRGB(18, 10, 25),
+        SECONDARY_COLOR = Color3.fromRGB(30, 20, 40),
+        TEXT_COLOR = Color3.fromRGB(248, 240, 255),
+        ACCENT_COLOR = Color3.fromRGB(150, 100, 200)
+    },
+    ["Amber Glow"] = {
+        THEME_COLOR = Color3.fromRGB(245, 158, 11),
+        BACKGROUND_COLOR = Color3.fromRGB(20, 16, 8),
+        SECONDARY_COLOR = Color3.fromRGB(35, 28, 15),
+        TEXT_COLOR = Color3.fromRGB(255, 248, 220),
+        ACCENT_COLOR = Color3.fromRGB(200, 140, 60)
+    },
+    ["Blood Moon"] = {
+        THEME_COLOR = Color3.fromRGB(185, 28, 28),
+        BACKGROUND_COLOR = Color3.fromRGB(20, 8, 8),
+        SECONDARY_COLOR = Color3.fromRGB(35, 15, 15),
+        TEXT_COLOR = Color3.fromRGB(255, 230, 230),
+        ACCENT_COLOR = Color3.fromRGB(150, 80, 80)
+    }
+}
+
+-- Configuration
+local CONFIG = THEMES["Default"]
+local currentTheme = "Default"
+
+-- Feature states
+local FEATURES = {
+    combat = {
+        killAll = false,
+        autoAim = false,
+        reach = false
+    },
+    visual = {
+        esp = false,
+        tracers = false,
+        chams = false
+    },
+    settings = {
+        espColor = "Red",
+        uiTheme = "Default"
+    }
+}
+
+-- Function to apply theme
+local function applyTheme(themeName, gui)
+    if not THEMES[themeName] or not gui then return end
+    
+    CONFIG = THEMES[themeName]
+    currentTheme = themeName
+    
+    -- Update main frame
+    local mainFrame = gui:FindFirstChild("MainFrame")
+    if mainFrame then
+        mainFrame.BackgroundColor3 = CONFIG.BACKGROUND_COLOR
+        
+        -- Update title bar
+        local titleBar = mainFrame:FindFirstChild("TitleBar")
+        if titleBar then
+            titleBar.BackgroundColor3 = CONFIG.SECONDARY_COLOR
+            local titleText = titleBar:FindFirstChild("TitleText")
+            if titleText then
+                titleText.TextColor3 = CONFIG.THEME_COLOR
+            end
+        end
+        
+        -- Update shadow
+        local shadow = mainFrame:FindFirstChild("Shadow")
+        if shadow then
+            shadow.ImageColor3 = CONFIG.THEME_COLOR
+        end
+        
+        -- Update content sections
+        local contentFrame = mainFrame:FindFirstChild("ContentFrame")
+        if contentFrame then
+            -- Update section titles
+            for _, section in pairs(contentFrame:GetChildren()) do
+                if section:IsA("Frame") and section.Name:find("Section") then
+                    local sectionTitle = section:FindFirstChild("SectionTitle")
+                    if sectionTitle then
+                        sectionTitle.TextColor3 = CONFIG.THEME_COLOR
+                    end
+                    
+                    -- Update toggle switches
+                    for _, toggle in pairs(section:GetChildren()) do
+                        if toggle.Name:find("Toggle") then
+                            local label = toggle:FindFirstChild("Label")
+                            if label then
+                                label.TextColor3 = CONFIG.TEXT_COLOR
+                            end
+                        end
+                    end
+                end
+            end
+            
+            -- Update info frame
+            local infoFrame = contentFrame:FindFirstChild("Frame")
+            if infoFrame then
+                infoFrame.BackgroundColor3 = CONFIG.SECONDARY_COLOR
+                local versionLabel = infoFrame:FindFirstChild("TextLabel")
+                if versionLabel then
+                    versionLabel.TextColor3 = CONFIG.ACCENT_COLOR
+                end
+                for _, child in pairs(infoFrame:GetChildren()) do
+                    if child:IsA("TextLabel") and child.Text:find("Status:") then
+                        child.TextColor3 = CONFIG.THEME_COLOR
+                    end
+                end
+            end
+        end
+    end
+    
+    print("Theme changed to: " .. themeName)
+end
+
+-- Create main GUI
+local function createMainGui()
+    local screenGui = Instance.new("ScreenGui")
+    screenGui.Name = "TrapwareUI"
+    screenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+    screenGui.Parent = playerGui
+    
+    -- Main frame - Made smaller
+    local mainFrame = Instance.new("Frame")
+    mainFrame.Name = "MainFrame"
+    mainFrame.Size = UDim2.new(0, 650, 0, 480) -- Reduced from 800x600
+    mainFrame.Position = UDim2.new(0.5, -325, 0.5, -240)
+    mainFrame.BackgroundColor3 = CONFIG.BACKGROUND_COLOR
+    mainFrame.BorderSizePixel = 0
+    mainFrame.Active = true
+    mainFrame.Draggable = true
+    mainFrame.Parent = screenGui
+    
+    -- Add corner radius
+    local corner = Instance.new("UICorner")
+    corner.CornerRadius = UDim.new(0, 12)
+    corner.Parent = mainFrame
+    
+    -- Add glow effect
+    local shadow = Instance.new("ImageLabel")
+    shadow.Name = "Shadow"
+    shadow.Size = UDim2.new(1, 20, 1, 20)
+    shadow.Position = UDim2.new(0, -10, 0, -10)
+    shadow.BackgroundTransparency = 1
+    shadow.Image = "rbxasset://textures/ui/Controls/DropShadow.png"
+    shadow.ImageColor3 = CONFIG.THEME_COLOR
+    shadow.ImageTransparency = 0.5
+    shadow.ScaleType = Enum.ScaleType.Slice
+    shadow.SliceCenter = Rect.new(12, 12, 276, 276)
+    shadow.ZIndex = -1
+    shadow.Parent = mainFrame
+    
+    return screenGui, mainFrame
+end
+
+-- Create title bar
+local function createTitleBar(parent)
+    local titleBar = Instance.new("Frame")
+    titleBar.Name = "TitleBar"
+    titleBar.Size = UDim2.new(1, 0, 0, 50) -- Reduced height
+    titleBar.Position = UDim2.new(0, 0, 0, 0)
+    titleBar.BackgroundColor3 = CONFIG.SECONDARY_COLOR
+    titleBar.BorderSizePixel = 0
+    titleBar.Parent = parent
+    
+    local titleCorner = Instance.new("UICorner")
+    titleCorner.CornerRadius = UDim.new(0, 12)
+    titleCorner.Parent = titleBar
+    
+    -- Title text
+    local titleText = Instance.new("TextLabel")
+    titleText.Name = "TitleText"
+    titleText.Size = UDim2.new(0, 200, 1, 0)
+    titleText.Position = UDim2.new(0, 15, 0, 0)
+    titleText.BackgroundTransparency = 1
+    titleText.Text = "Trapware v1.2.5"
+    titleText.TextColor3 = CONFIG.THEME_COLOR
+    titleText.TextSize = 20 -- Reduced from 24
+    titleText.TextXAlignment = Enum.TextXAlignment.Left
+    titleText.Font = Enum.Font.GothamBold
+    titleText.Parent = titleBar
+    
+    -- Close button
+    local closeButton = Instance.new("TextButton")
+    closeButton.Name = "CloseButton"
+    closeButton.Size = UDim2.new(0, 35, 0, 35) -- Reduced size
+    closeButton.Position = UDim2.new(1, -45, 0.5, -17.5)
+    closeButton.BackgroundColor3 = Color3.fromRGB(239, 68, 68)
+    closeButton.BorderSizePixel = 0
+    closeButton.Text = "×"
+    closeButton.TextColor3 = CONFIG.TEXT_COLOR
+    closeButton.TextSize = 18
+    closeButton.Font = Enum.Font.GothamBold
+    closeButton.Parent = titleBar
+    
+    local closeCorner = Instance.new("UICorner")
+    closeCorner.CornerRadius = UDim.new(1, 0)
+    closeCorner.Parent = closeButton
+    
+    return titleBar, closeButton
+end
+
+-- Create toggle switch - Fixed alignment
+local function createToggleSwitch(parent, name, position, enabled)
+    local toggleFrame = Instance.new("Frame")
+    toggleFrame.Name = name .. "Toggle"
+    toggleFrame.Size = UDim2.new(1, -20, 0, 35) -- Adjusted size
+    toggleFrame.Position = position
+    toggleFrame.BackgroundTransparency = 1
+    toggleFrame.Parent = parent
+    
+    local label = Instance.new("TextLabel")
+    label.Name = "Label"
+    label.Size = UDim2.new(1, -80, 1, 0) -- Properly sized to leave room for switch
+    label.Position = UDim2.new(0, 10, 0, 0)
+    label.BackgroundTransparency = 1
+    label.Text = name
+    label.TextColor3 = CONFIG.TEXT_COLOR
+    label.TextSize = 14 -- Reduced from 16
+    label.TextXAlignment = Enum.TextXAlignment.Left
+    label.Font = Enum.Font.Gotham
+    label.Parent = toggleFrame
+    
+    local switchBg = Instance.new("Frame")
+    switchBg.Name = "SwitchBackground"
+    switchBg.Size = UDim2.new(0, 50, 0, 25) -- Reduced size
+    switchBg.Position = UDim2.new(1, -60, 0.5, -12.5) -- Properly positioned
+    switchBg.BackgroundColor3 = enabled and CONFIG.THEME_COLOR or Color3.fromRGB(75, 85, 99)
+    switchBg.BorderSizePixel = 0
+    switchBg.Parent = toggleFrame
+    
+    local switchCorner = Instance.new("UICorner")
+    switchCorner.CornerRadius = UDim.new(1, 0)
+    switchCorner.Parent = switchBg
+    
+    local switchKnob = Instance.new("Frame")
+    switchKnob.Name = "SwitchKnob"
+    switchKnob.Size = UDim2.new(0, 21, 0, 21) -- Reduced size
+    switchKnob.Position = enabled and UDim2.new(1, -23, 0.5, -10.5) or UDim2.new(0, 2, 0.5, -10.5)
+    switchKnob.BackgroundColor3 = CONFIG.TEXT_COLOR
+    switchKnob.BorderSizePixel = 0
+    switchKnob.Parent = switchBg
+    
+    local knobCorner = Instance.new("UICorner")
+    knobCorner.CornerRadius = UDim.new(1, 0)
+    knobCorner.Parent = switchKnob
+    
+    -- Toggle functionality
+    local button = Instance.new("TextButton")
+    button.Size = UDim2.new(1, 0, 1, 0)
+    button.BackgroundTransparency = 1
+    button.Text = ""
+    button.Parent = switchBg
+    
+    local isEnabled = enabled
+    button.MouseButton1Click:Connect(function()
+        isEnabled = not isEnabled
+        
+        local bgColorTween = TweenService:Create(switchBg, 
+            TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out),
+            {BackgroundColor3 = isEnabled and CONFIG.THEME_COLOR or Color3.fromRGB(75, 85, 99)}
+        )
+        
+        local knobTween = TweenService:Create(switchKnob,
+            TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out),
+            {Position = isEnabled and UDim2.new(1, -23, 0.5, -10.5) or UDim2.new(0, 2, 0.5, -10.5)}
+        )
+        
+        bgColorTween:Play()
+        knobTween:Play()
+        
+        -- Update feature state
+        if name == "Kill All" then
+            FEATURES.combat.killAll = isEnabled
+        elseif name == "Auto Aim" then
+            FEATURES.combat.autoAim = isEnabled
+        elseif name == "Reach" then
+            FEATURES.combat.reach = isEnabled
+        elseif name == "ESP" then
+            FEATURES.visual.esp = isEnabled
+        elseif name == "Tracers" then
+            FEATURES.visual.tracers = isEnabled
+        elseif name == "Chams" then
+            FEATURES.visual.chams = isEnabled
+        end
+        
+        print(name .. " " .. (isEnabled and "enabled" or "disabled"))
+    end)
+    
+    return toggleFrame
+end
+
+-- Create feature section
+local function createFeatureSection(parent, title, position, size)
+    local section = Instance.new("Frame")
+    section.Name = title .. "Section"
+    section.Size = size
+    section.Position = position
+    section.BackgroundColor3 = Color3.fromRGB(31, 41, 55)
+    section.BackgroundTransparency = 0.5
+    section.BorderSizePixel = 0
+    section.Parent = parent
+    
+    local sectionCorner = Instance.new("UICorner")
+    sectionCorner.CornerRadius = UDim.new(0, 8)
+    sectionCorner.Parent = section
+    
+    local sectionTitle = Instance.new("TextLabel")
+    sectionTitle.Name = "SectionTitle"
+    sectionTitle.Size = UDim2.new(1, 0, 0, 35) -- Reduced height
+    sectionTitle.Position = UDim2.new(0, 0, 0, 0)
+    sectionTitle.BackgroundTransparency = 1
+    sectionTitle.Text = title
+    sectionTitle.TextColor3 = CONFIG.THEME_COLOR
+    sectionTitle.TextSize = 16 -- Reduced from 18
+    sectionTitle.Font = Enum.Font.GothamBold
+    sectionTitle.Parent = section
+    
+    return section
+end
+
+-- Create theme dropdown
+local function createThemeDropdown(parent, gui)
+    local themeLabel = Instance.new("TextLabel")
+    themeLabel.Size = UDim2.new(0, 80, 0, 25)
+    themeLabel.Position = UDim2.new(0.5, 10, 0, 45)
+    themeLabel.BackgroundTransparency = 1
+    themeLabel.Text = "UI Theme:"
+    themeLabel.TextColor3 = CONFIG.TEXT_COLOR
+    themeLabel.TextSize = 12
+    themeLabel.Font = Enum.Font.Gotham
+    themeLabel.TextXAlignment = Enum.TextXAlignment.Left
+    themeLabel.Parent = parent
+    
+    local themeDropdown = Instance.new("TextButton")
+    themeDropdown.Size = UDim2.new(0, 120, 0, 25)
+    themeDropdown.Position = UDim2.new(0.5, 95, 0, 45)
+    themeDropdown.BackgroundColor3 = Color3.fromRGB(55, 65, 81)
+    themeDropdown.BorderSizePixel = 0
+    themeDropdown.Text = currentTheme .. " ▼"
+    themeDropdown.TextColor3 = CONFIG.TEXT_COLOR
+    themeDropdown.TextSize = 12
+    themeDropdown.Font = Enum.Font.Gotham
+    themeDropdown.Parent = parent
+    
+    local dropdownCorner = Instance.new("UICorner")
+    dropdownCorner.CornerRadius = UDim.new(0, 4)
+    dropdownCorner.Parent = themeDropdown
+    
+    -- Dropdown menu
+    local dropdownMenu = Instance.new("Frame")
+    dropdownMenu.Name = "DropdownMenu"
+    dropdownMenu.Size = UDim2.new(0, 120, 0, 200)
+    dropdownMenu.Position = UDim2.new(0, 0, 1, 2)
+    dropdownMenu.BackgroundColor3 = Color3.fromRGB(45, 55, 71)
+    dropdownMenu.BorderSizePixel = 0
+    dropdownMenu.Visible = false
+    dropdownMenu.Parent = themeDropdown
+    dropdownMenu.ZIndex = 10
+    
+    local menuCorner = Instance.new("UICorner")
+    menuCorner.CornerRadius = UDim.new(0, 4)
+    menuCorner.Parent = dropdownMenu
+    
+    -- Scrolling frame for themes
+    local scrollFrame = Instance.new("ScrollingFrame")
+    scrollFrame.Size = UDim2.new(1, 0, 1, 0)
+    scrollFrame.BackgroundTransparency = 1
+    scrollFrame.BorderSizePixel = 0
+    scrollFrame.ScrollBarThickness = 4
+    scrollFrame.ScrollBarImageColor3 = CONFIG.THEME_COLOR
+    scrollFrame.Parent = dropdownMenu
+    
+    local listLayout = Instance.new("UIListLayout")
+    listLayout.SortOrder = Enum.SortOrder.LayoutOrder
+    listLayout.Parent = scrollFrame
+    
+    -- Create theme options
+    local themeNames = {}
+    for themeName, _ in pairs(THEMES) do
+        table.insert(themeNames, themeName)
+    end
+    table.sort(themeNames)
+    
+    for i, themeName in ipairs(themeNames) do
+        local themeOption = Instance.new("TextButton")
+        themeOption.Size = UDim2.new(1, 0, 0, 25)
+        themeOption.BackgroundColor3 = themeName == currentTheme and CONFIG.THEME_COLOR or Color3.fromRGB(35, 45, 61)
+        themeOption.BorderSizePixel = 0
+        themeOption.Text = themeName
+        themeOption.TextColor3 = CONFIG.TEXT_COLOR
+        themeOption.TextSize = 11
+        themeOption.Font = Enum.Font.Gotham
+        themeOption.LayoutOrder = i
+        themeOption.Parent = scrollFrame
+        
+        themeOption.MouseButton1Click:Connect(function()
+            applyTheme(themeName, gui)
+            themeDropdown.Text = themeName .. " ▼"
+            dropdownMenu.Visible = false
+            
+            -- Update all theme option backgrounds
+            for _, option in pairs(scrollFrame:GetChildren()) do
+                if option:IsA("TextButton") then
+                    option.BackgroundColor3 = option.Text == themeName and CONFIG.THEME_COLOR or Color3.fromRGB(35, 45, 61)
+                end
+            end
+        end)
+        
+        themeOption.MouseEnter:Connect(function()
+            if themeName ~= currentTheme then
+                themeOption.BackgroundColor3 = Color3.fromRGB(55, 65, 81)
+            end
+        end)
+        
+        themeOption.MouseLeave:Connect(function()
+            if themeName ~= currentTheme then
+                themeOption.BackgroundColor3 = Color3.fromRGB(35, 45, 61)
+            end
+        end)
+    end
+    
+    -- Update canvas size
+    scrollFrame.CanvasSize = UDim2.new(0, 0, 0, #themeNames * 25)
+    
+    -- Toggle dropdown
+    themeDropdown.MouseButton1Click:Connect(function()
+        dropdownMenu.Visible = not dropdownMenu.Visible
+    end)
+    
+    -- Close dropdown when clicking elsewhere
+    UserInputService.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 then
+            if dropdownMenu.Visible then
+                local mouse = Players.LocalPlayer:GetMouse()
+                local guiObjects = playerGui:GetGuiObjectsAtPosition(mouse.X, mouse.Y)
+                local clickedOnDropdown = false
+                
+                for _, obj in pairs(guiObjects) do
+                    if obj:IsDescendantOf(themeDropdown) then
+                        clickedOnDropdown = true
+                        break
+                    end
+                end
+                
+                if not clickedOnDropdown then
+                    dropdownMenu.Visible = false
+                end
+            end
+        end
+    end)
+end
+
+-- Main function to create the interface
+local function createTrapwareInterface()
+    local screenGui, mainFrame = createMainGui()
+    local titleBar, closeButton = createTitleBar(mainFrame)
+    
+    -- Close button functionality
+    closeButton.MouseButton1Click:Connect(function()
+        screenGui:Destroy()
+    end)
+    
+    -- Content area
+    local contentFrame = Instance.new("Frame")
+    contentFrame.Name = "ContentFrame"
+    contentFrame.Size = UDim2.new(1, -30, 1, -80) -- Adjusted for smaller UI
+    contentFrame.Position = UDim2.new(0, 15, 0, 65)
+    contentFrame.BackgroundTransparency = 1
+    contentFrame.Parent = mainFrame
+    
+    -- Combat section
+    local combatSection = createFeatureSection(contentFrame, "Combat", 
+        UDim2.new(0, 0, 0, 0), UDim2.new(0.48, 0, 0, 160)) -- Reduced height
+    
+    createToggleSwitch(combatSection, "Kill All", UDim2.new(0, 0, 0, 40), FEATURES.combat.killAll)
+    createToggleSwitch(combatSection, "Auto Aim", UDim2.new(0, 0, 0, 80), FEATURES.combat.autoAim)
+    createToggleSwitch(combatSection, "Reach", UDim2.new(0, 0, 0, 120), FEATURES.combat.reach)
+    
+    -- Visual section
+    local visualSection = createFeatureSection(contentFrame, "Visual",
+        UDim2.new(0.52, 0, 0, 0), UDim2.new(0.48, 0, 0, 160)) -- Reduced height
+    
+    createToggleSwitch(visualSection, "ESP", UDim2.new(0, 0, 0, 40), FEATURES.visual.esp)
+    createToggleSwitch(visualSection, "Tracers", UDim2.new(0, 0, 0, 80), FEATURES.visual.tracers)
+    createToggleSwitch(visualSection, "Chams", UDim2.new(0, 0, 0, 120), FEATURES.visual.chams)
+    
+    -- Settings section
+    local settingsSection = createFeatureSection(contentFrame, "Settings",
+        UDim2.new(0, 0, 0, 175), UDim2.new(1, 0, 0, 120)) -- Reduced height
+    
+    -- ESP Color picker
+    local colorLabel = Instance.new("TextLabel")
+    colorLabel.Size = UDim2.new(0, 80, 0, 25)
+    colorLabel.Position = UDim2.new(0, 15, 0, 45)
+    colorLabel.BackgroundTransparency = 1
+    colorLabel.Text = "ESP Color:"
+    colorLabel.TextColor3 = CONFIG.TEXT_COLOR
+    colorLabel.TextSize = 12
+    colorLabel.Font = Enum.Font.Gotham
+    colorLabel.TextXAlignment = Enum.TextXAlignment.Left
+    colorLabel.Parent = settingsSection
+    
+    local colors = {"Red", "Blue", "Green", "Yellow"}
+    local colorValues = {
+        Color3.fromRGB(239, 68, 68),
+        Color3.fromRGB(59, 130, 246),
+        Color3.fromRGB(34, 197, 94),
+        Color3.fromRGB(234, 179, 8)
+    }
+    
+    for i, color in ipairs(colors) do
+        local colorButton = Instance.new("TextButton")
+        colorButton.Size = UDim2.new(0, 25, 0, 25) -- Reduced size
+        colorButton.Position = UDim2.new(0, 100 + (i-1) * 32, 0, 45)
+        colorButton.BackgroundColor3 = colorValues[i]
+        colorButton.BorderSizePixel = FEATURES.settings.espColor == color and 2 or 0
+        colorButton.BorderColor3 = CONFIG.TEXT_COLOR
+        colorButton.Text = ""
+        colorButton.Parent = settingsSection
+        
+        local colorCorner = Instance.new("UICorner")
+        colorCorner.CornerRadius = UDim.new(1, 0)
+        colorCorner.Parent = colorButton
+        
+        colorButton.MouseButton1Click:Connect(function()
+            FEATURES.settings.espColor = color
+            -- Update all color button borders
+            for j = 1, #colors do
+                local otherButton = settingsSection:FindFirstChild("TextButton")
+                if otherButton then
+                    otherButton.BorderSizePixel = (j == i) and 2 or 0
+                end
+            end
+            print("ESP Color changed to: " .. color)
+        end)
+    end
+    
+    -- Create theme dropdown
+    createThemeDropdown(settingsSection, screenGui)
+    
+    -- Info section
+    local infoFrame = Instance.new("Frame")
+    infoFrame.Size = UDim2.new(1, 0, 0, 60) -- Reduced height
+    infoFrame.Position = UDim2.new(0, 0, 1, -60)
+    infoFrame.BackgroundColor3 = CONFIG.SECONDARY_COLOR
+    infoFrame.BackgroundTransparency = 0.3
+    infoFrame.BorderSizePixel = 0
+    infoFrame.Parent = contentFrame
+    
+    local infoCorner = Instance.new("UICorner")
+    infoCorner.CornerRadius = UDim.new(0, 8)
+    infoCorner.Parent = infoFrame
+    
+    local versionLabel = Instance.new("TextLabel")
+    versionLabel.Size = UDim2.new(0.5, 0, 1, 0)
+    versionLabel.Position = UDim2.new(0, 15, 0, 0)
+    versionLabel.BackgroundTransparency = 1
+    versionLabel.Text = "Version: v1.2.5\nLast Updated: June 2025"
+    versionLabel.TextColor3 = CONFIG.ACCENT_COLOR
+    versionLabel.TextSize = 10
+    versionLabel.Font = Enum.Font.Gotham
+    versionLabel.TextYAlignment = Enum.TextYAlignment.Center
+    versionLabel.TextXAlignment = Enum.TextXAlignment.Left
+    versionLabel.Parent = infoFrame
+    
+    local statusLabel = Instance.new("TextLabel")
+    statusLabel.Size = UDim2.new(0.5, 0, 1, 0)
+    statusLabel.Position = UDim2.new(0.5, 0, 0, 0)
+    statusLabel.BackgroundTransparency = 1
+    statusLabel.Text = "Status: Active\nFeatures: Loaded"
+    statusLabel.TextColor3 = CONFIG.THEME_COLOR
+    statusLabel.TextSize = 10
+    statusLabel.Font = Enum.Font.Gotham
+    statusLabel.TextYAlignment = Enum.TextYAlignment.Center
+    statusLabel.TextXAlignment = Enum.TextXAlignment.Right
+    statusLabel.Parent = infoFrame
+    
+    print("Trapware Interface v1.2.5 loaded successfully!")
+    return screenGui
+end
+
+-- Toggle key (F1 to show/hide)
+local gui = nil
+local isVisible = false
+
+UserInputService.InputBegan:Connect(function(input, gameProcessed)
+    if gameProcessed then return end
+    
+    if input.KeyCode == Enum.KeyCode.F1 then
+        if gui and gui.Parent then
+            gui:Destroy()
+            gui = nil
+            isVisible = false
+            print("Trapware Interface hidden")
+        else
+            gui = createTrapwareInterface()
+            isVisible = true
+            print("Trapware Interface shown")
+        end
+    end
+end)
+
+-- Initialize
+print("Trapware v1.2.5 - Press F1 to toggle interface")
+print("Available themes: Default, Crimson Fire, Ocean Depths, Forest Mystique, Golden Sunset,")
+print("Purple Haze, Neon Cyber, Arctic Frost, Volcanic Ember, Midnight Steel, Toxic Waste,")
+print("Rose Gold, Electric Blue, Sunset Orange, Deep Space, Cherry Blossom, Matrix Green,")
+print("Royal Purple, Amber Glow, Blood Moon")
+
+-- Auto-show on first load
+wait(1)
+gui = createTrapwareInterface()
