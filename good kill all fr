@@ -1,0 +1,79 @@
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local LocalPlayer = Players.LocalPlayer
+local Camera = workspace.CurrentCamera
+
+-- Settings
+local clickCount = 10
+local clickDelay = 0.2
+local waitAfterKill = 0.1
+local scanInterval = 0.5 -- how often to check for new enemies
+
+-- Simulate mouse click
+local function clickMouse()
+    mouse1press()
+    task.wait(0.05)
+    mouse1release()
+end
+
+-- Find the closest alive enemy
+local function getClosestEnemy()
+    local closest = nil
+    local shortestDist = math.huge
+
+    for _, player in ipairs(Players:GetPlayers()) do
+        if player ~= LocalPlayer and player.Team ~= LocalPlayer.Team and player.Character then
+            local hrp = player.Character:FindFirstChild("HumanoidRootPart")
+            local humanoid = player.Character:FindFirstChildOfClass("Humanoid")
+            if hrp and humanoid and humanoid.Health > 0 then
+                local dist = (LocalPlayer.Character.HumanoidRootPart.Position - hrp.Position).Magnitude
+                if dist < shortestDist then
+                    shortestDist = dist
+                    closest = player
+                end
+            end
+        end
+    end
+
+    return closest
+end
+
+-- Kill a single target
+local function killTarget(target)
+    local char = LocalPlayer.Character
+    if not char or not char:FindFirstChild("HumanoidRootPart") then return end
+    local hrp = char:FindFirstChild("HumanoidRootPart")
+
+    local targetHRP = target.Character:FindFirstChild("HumanoidRootPart")
+    local targetHead = target.Character:FindFirstChild("Head")
+    local humanoid = target.Character:FindFirstChildOfClass("Humanoid")
+
+    if not targetHRP or not targetHead or not humanoid then return end
+
+    -- Teleport above enemy
+    hrp.CFrame = CFrame.new(targetHRP.Position + Vector3.new(0, 3, 0))
+    task.wait(0.1)
+
+    -- Aim and click
+    for i = 1, clickCount do
+        if humanoid.Health <= 0 then break end
+        Camera.CFrame = CFrame.new(Camera.CFrame.Position, targetHead.Position)
+        clickMouse()
+        task.wait(clickDelay)
+    end
+end
+
+-- Main loop
+task.spawn(function()
+    while true do
+        local target = getClosestEnemy()
+
+        if target then
+            killTarget(target)
+            task.wait(waitAfterKill)
+        else
+            -- No target, keep scanning every 0.5s
+            task.wait(scanInterval)
+        end
+    end
+end)
