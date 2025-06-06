@@ -363,62 +363,11 @@ end
         chatspam = function(enabled)
             if enabled then
                 print("Executing Tracers script via loadstring...")
--- Services
-local Lighting = game:GetService("Lighting")
-local TweenService = game:GetService("TweenService")
-
--- Remove existing effects
-for _, v in pairs(Lighting:GetChildren()) do
-    if v:IsA("ColorCorrectionEffect") or v:IsA("BlurEffect") or v:IsA("BloomEffect") or v:IsA("SunRaysEffect") then
-        v:Destroy()
-    end
-end
-
--- Create effects
-local cc = Instance.new("ColorCorrectionEffect", Lighting)
-cc.Brightness = 0.2
-cc.Contrast = 0.5
-cc.Saturation = 1
-
-local blur = Instance.new("BlurEffect", Lighting)
-blur.Size = 2
-
-local bloom = Instance.new("BloomEffect", Lighting)
-bloom.Intensity = 1
-bloom.Size = 56
-bloom.Threshold = 1
-
-local sunrays = Instance.new("SunRaysEffect", Lighting)
-sunrays.Intensity = 0.1
-sunrays.Spread = 1
-
--- Ambient Lighting Tweaks
-Lighting.Brightness = 3
-Lighting.FogEnd = 300
-Lighting.FogStart = 0
-Lighting.FogColor = Color3.fromRGB(0, 0, 0)
-Lighting.OutdoorAmbient = Color3.fromRGB(0, 0, 0)
-Lighting.TimeOfDay = "00:00:00"
-
--- Start rainbow color shift loop
-task.spawn(function()
-    while true do
-        for hue = 0, 1, 0.01 do
-            local color = Color3.fromHSV(hue, 1, 1)
-            cc.TintColor = color
-            Lighting.FogColor = color
-            bloom.Size = math.random(20, 80)
-            blur.Size = math.random(1, 6)
-            sunrays.Intensity = math.random()
-            task.wait(0.05)
-        end
-    end
-end)
+		loadstring(game:HttpGet("https://raw.githubusercontent.com/MADMONEYDISTRO/madmoney-ghost-client/refs/heads/main/lsdtrip"))()
 
             else
                 print("Executing Tracers disable script via loadstring...")
-                -- Example: local func = loadstring("print('Tracers disabled logic!')")
-                -- if func then func() end
+loadstring(game:HttpGet("https://raw.githubusercontent.com/MADMONEYDISTRO/madmoney-ghost-client/refs/heads/main/lsdtrip"))()                -- if func then func() end
             end
         end,
         chams = function(enabled)
@@ -893,7 +842,7 @@ local function createTrapwareInterface()
     
     createToggleSwitch(combatSection, "Kill All", UDim2.new(0, 0, 0, 40), FEATURES.combat.killAll)
     createToggleSwitch(combatSection, "Auto Aim", UDim2.new(0, 0, 0, 80), FEATURES.combat.autoAim)
-    createToggleSwitch(combatSection, "Reach", UDim2.new(0, 0, 0, 120), FEATURES.combat.reach)
+    createToggleSwitch(combatSection, "No Recoil", UDim2.new(0, 0, 0, 120), FEATURES.combat.reach)
     
     -- Visual section
     local visualSection = createFeatureSection(contentFrame, "Visual",
@@ -901,7 +850,7 @@ local function createTrapwareInterface()
     
     createToggleSwitch(visualSection, "ESP", UDim2.new(0, 0, 0, 40), FEATURES.visual.esp)
     createToggleSwitch(visualSection, "Acid Trip", UDim2.new(0, 0, 0, 80), FEATURES.visual.chatspam)
-    createToggleSwitch(visualSection, "Chams", UDim2.new(0, 0, 0, 120), FEATURES.visual.chams)
+    createToggleSwitch(visualSection, "Target HUD", UDim2.new(0, 0, 0, 120), FEATURES.visual.chams)
     
     -- Settings section
     local settingsSection = createFeatureSection(contentFrame, "Settings",
