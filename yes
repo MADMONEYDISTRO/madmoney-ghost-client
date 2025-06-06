@@ -214,7 +214,81 @@ local FEATURE_FUNCTIONS = {
         esp = function(enabled)
             if enabled then
                 print("Executing ESP script via loadstring...")
-                -- Example: local func = loadstring("print('ESP enabled logic!')")
+                local settings = {
+    Color = Color3.fromRGB(0, 255, 0), -- Text color for enemy
+    Size = 15,
+    Transparency = 1, -- 1 Visible - 0 Not Visible
+    AutoScale = true
+}
+
+local space = game:GetService("Workspace")
+local player = game:GetService("Players").LocalPlayer
+local camera = space.CurrentCamera
+
+local Library = loadstring(game:HttpGet("https://raw.githubusercontent.com/Blissful4992/ESPs/main/UniversalSkeleton.lua"))()
+
+local Skeletons = {}
+
+local function NewText(color, size, transparency)
+    local text = Drawing.new("Text")
+    text.Visible = false
+    text.Text = ""
+    text.Position = Vector2.new(0, 0)
+    text.Color = color
+    text.Size = size
+    text.Center = true
+    text.Transparency = transparency
+    return text
+end
+
+local function CreateSkeleton(plr)
+    local skeleton = Library:NewSkeleton(plr, true)
+    skeleton.Size = 50 -- Super wide and large for maximum visibility
+    skeleton.Static = true -- Ensures the skeleton stays still
+    table.insert(Skeletons, skeleton)
+
+    local nameTag = NewText(settings.Color, settings.Size, settings.Transparency)
+
+    game:GetService("RunService").RenderStepped:Connect(function()
+        if plr.Character and plr.Character:FindFirstChild("HumanoidRootPart") and plr.Team ~= player.Team then
+            local HumanoidRootPart_Pos, OnScreen = camera:WorldToViewportPoint(plr.Character.HumanoidRootPart.Position)
+            if OnScreen then
+                local distance = math.floor((player.Character.HumanoidRootPart.Position - plr.Character.HumanoidRootPart.Position).magnitude)
+                nameTag.Text = string.format("%s [%d Studs]", plr.Name, distance)
+                nameTag.Position = Vector2.new(HumanoidRootPart_Pos.X, HumanoidRootPart_Pos.Y - 50)
+                nameTag.Visible = true
+                skeleton.Visible = true
+            else
+                nameTag.Visible = false
+                skeleton.Visible = false
+            end
+        else
+            nameTag.Visible = false
+            skeleton.Visible = false
+        end
+    end)
+end
+
+for _, plr in pairs(game.Players:GetPlayers()) do
+    if plr.Name ~= player.Name then
+        CreateSkeleton(plr)
+    end
+end
+
+game.Players.PlayerAdded:Connect(function(plr)
+    CreateSkeleton(plr)
+end)
+
+-- Lock skeletons in place and prevent movement
+while true do
+    for _, skeleton in pairs(Skeletons) do
+        if skeleton.Part then
+            skeleton.Part.Anchored = true -- Ensures the skeleton doesn't move
+        end
+    end
+    wait(0.1)
+end
+
                 -- if func then func() end
             else
                 print("Executing ESP disable script via loadstring...")
