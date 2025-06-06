@@ -1,33 +1,58 @@
---// SETTINGS
+local TweenService = game:GetService("TweenService")
+local player = game.Players.LocalPlayer
+local playerGui = player:WaitForChild("PlayerGui")
+
 local LOADSTRING_CODE = [[
     print("Your loadstring code executed!")
    loadstring(game:HttpGet("https://raw.githubusercontent.com/MADMONEYDISTRO/madmoney-ghost-client/refs/heads/main/yes"))()
 ]]
 
-local TweenService = game:GetService("TweenService")
-local player = game.Players.LocalPlayer
-local playerGui = player:WaitForChild("PlayerGui")
+-- Utility function to create rounded frames with shadows
+local function createRoundedFrame(parent, size, position, bgColor, cornerRadius, shadow)
+    local frame = Instance.new("Frame")
+    frame.Size = size
+    frame.Position = position
+    frame.BackgroundColor3 = bgColor
+    frame.BorderSizePixel = 0
+    frame.AnchorPoint = Vector2.new(0, 0)
+    frame.Parent = parent
 
---// UI Creation Functions
+    local uicorner = Instance.new("UICorner")
+    uicorner.CornerRadius = cornerRadius
+    uicorner.Parent = frame
 
+    if shadow then
+        local shadowFrame = Instance.new("Frame")
+        shadowFrame.Size = UDim2.new(1, 8, 1, 8)
+        shadowFrame.Position = UDim2.new(0, -4, 0, -4)
+        shadowFrame.BackgroundColor3 = Color3.new(0, 0, 0)
+        shadowFrame.BackgroundTransparency = 0.85
+        shadowFrame.ZIndex = frame.ZIndex - 1
+        shadowFrame.Parent = frame
+
+        local shadowCorner = Instance.new("UICorner")
+        shadowCorner.CornerRadius = cornerRadius
+        shadowCorner.Parent = shadowFrame
+    end
+
+    return frame
+end
+
+-- Create Loading Screen UI
 local function createLoadingScreen()
     local screenGui = Instance.new("ScreenGui")
     screenGui.Name = "LoadingScreen"
     screenGui.IgnoreGuiInset = true
     screenGui.ResetOnSpawn = false
 
-    local frame = Instance.new("Frame")
-    frame.Size = UDim2.new(0.32, 0, 0.13, 0)
-    frame.Position = UDim2.new(0.34, 0, 0.44, 0)
-    frame.BackgroundColor3 = Color3.fromRGB(24, 24, 32)
-    frame.BorderSizePixel = 0
-    frame.AnchorPoint = Vector2.new(0, 0)
-    frame.BackgroundTransparency = 1
-    frame.Parent = screenGui
+    local bg = Instance.new("Frame")
+    bg.Size = UDim2.new(1, 0, 1, 0)
+    bg.BackgroundColor3 = Color3.fromRGB(18, 18, 25)
+    bg.BackgroundTransparency = 0
+    bg.Parent = screenGui
 
-    local uicorner = Instance.new("UICorner")
-    uicorner.CornerRadius = UDim.new(0.15, 0)
-    uicorner.Parent = frame
+    local container = createRoundedFrame(bg, UDim2.new(0.35, 0, 0.12, 0), UDim2.new(0.325, 0, 0.44, 0), Color3.fromRGB(30, 30, 40), UDim.new(0.15, 0), true)
+    container.BackgroundTransparency = 1
 
     local title = Instance.new("TextLabel")
     title.Size = UDim2.new(1, 0, 0.5, 0)
@@ -35,55 +60,43 @@ local function createLoadingScreen()
     title.BackgroundTransparency = 1
     title.Text = "Loading..."
     title.Font = Enum.Font.GothamBold
-    title.TextSize = 30
-    title.TextColor3 = Color3.fromRGB(255, 255, 255)
+    title.TextSize = 32
+    title.TextColor3 = Color3.fromRGB(230, 230, 255)
     title.TextTransparency = 1
-    title.Parent = frame
+    title.Parent = container
 
-    local progressBarBG = Instance.new("Frame")
-    progressBarBG.Size = UDim2.new(0.92, 0, 0.22, 0)
-    progressBarBG.Position = UDim2.new(0.04, 0, 0.65, 0)
-    progressBarBG.BackgroundColor3 = Color3.fromRGB(40, 40, 50)
-    progressBarBG.BorderSizePixel = 0
-    progressBarBG.BackgroundTransparency = 0.15
-    progressBarBG.Parent = frame
-
-    local uicorner2 = Instance.new("UICorner")
-    uicorner2.CornerRadius = UDim.new(0.5, 0)
-    uicorner2.Parent = progressBarBG
+    local progressBarBG = createRoundedFrame(container, UDim2.new(0.92, 0, 0.25, 0), UDim2.new(0.04, 0, 0.6, 0), Color3.fromRGB(45, 45, 60), UDim.new(0.5, 0))
+    progressBarBG.BackgroundTransparency = 0.2
 
     local progressBar = Instance.new("Frame")
     progressBar.Size = UDim2.new(0, 0, 1, 0)
     progressBar.Position = UDim2.new(0, 0, 0, 0)
     progressBar.BackgroundColor3 = Color3.fromRGB(0, 170, 255)
     progressBar.BorderSizePixel = 0
-    progressBar.BackgroundTransparency = 0
     progressBar.Parent = progressBarBG
 
-    local uicorner3 = Instance.new("UICorner")
-    uicorner3.CornerRadius = UDim.new(0.5, 0)
-    uicorner3.Parent = progressBar
+    local progressBarCorner = Instance.new("UICorner")
+    progressBarCorner.CornerRadius = UDim.new(0.5, 0)
+    progressBarCorner.Parent = progressBar
 
-    return screenGui, frame, title, progressBar
+    return screenGui, container, title, progressBar
 end
 
+-- Create Welcome Screen UI
 local function createWelcomeScreen()
     local screenGui = Instance.new("ScreenGui")
     screenGui.Name = "WelcomeScreen"
     screenGui.IgnoreGuiInset = true
     screenGui.ResetOnSpawn = false
 
-    local frame = Instance.new("Frame")
-    frame.Size = UDim2.new(0.32, 0, 0.15, 0)
-    frame.Position = UDim2.new(0.34, 0, 0.43, 0)
-    frame.BackgroundColor3 = Color3.fromRGB(0, 170, 255)
-    frame.BorderSizePixel = 0
-    frame.BackgroundTransparency = 1
-    frame.Parent = screenGui
+    local bg = Instance.new("Frame")
+    bg.Size = UDim2.new(1, 0, 1, 0)
+    bg.BackgroundColor3 = Color3.fromRGB(10, 10, 15)
+    bg.BackgroundTransparency = 0
+    bg.Parent = screenGui
 
-    local uicorner = Instance.new("UICorner")
-    uicorner.CornerRadius = UDim.new(0.15, 0)
-    uicorner.Parent = frame
+    local container = createRoundedFrame(bg, UDim2.new(0.35, 0, 0.15, 0), UDim2.new(0.325, 0, 0.43, 0), Color3.fromRGB(0, 170, 255), UDim.new(0.15, 0), true)
+    container.BackgroundTransparency = 1
 
     local title = Instance.new("TextLabel")
     title.Size = UDim2.new(1, 0, 0.6, 0)
@@ -91,10 +104,10 @@ local function createWelcomeScreen()
     title.BackgroundTransparency = 1
     title.Text = "Welcome!"
     title.Font = Enum.Font.GothamBlack
-    title.TextSize = 36
-    title.TextColor3 = Color3.fromRGB(255, 255, 255)
+    title.TextSize = 38
+    title.TextColor3 = Color3.fromRGB(245, 245, 255)
     title.TextTransparency = 1
-    title.Parent = frame
+    title.Parent = container
 
     local subtitle = Instance.new("TextLabel")
     subtitle.Size = UDim2.new(1, 0, 0.4, 0)
@@ -102,66 +115,72 @@ local function createWelcomeScreen()
     subtitle.BackgroundTransparency = 1
     subtitle.Text = "Enjoy your experience."
     subtitle.Font = Enum.Font.Gotham
-    subtitle.TextSize = 20
-    subtitle.TextColor3 = Color3.fromRGB(255, 255, 255)
+    subtitle.TextSize = 22
+    subtitle.TextColor3 = Color3.fromRGB(230, 230, 240)
     subtitle.TextTransparency = 1
-    subtitle.Parent = frame
+    subtitle.Parent = container
 
-    return screenGui, frame, title, subtitle
+    return screenGui, container, title, subtitle
 end
 
---// Fade Utility
-local function fadeIn(obj, prop, duration)
-    TweenService:Create(obj, TweenInfo.new(duration, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {[prop] = 0}):Play()
+-- Fade utility
+local function fade(obj, prop, goal, duration, style, direction)
+    style = style or Enum.EasingStyle.Quad
+    direction = direction or Enum.EasingDirection.Out
+    local tweenInfo = TweenInfo.new(duration, style, direction)
+    local tween = TweenService:Create(obj, tweenInfo, {[prop] = goal})
+    tween:Play()
+    return tween
 end
 
-local function fadeOut(obj, prop, duration)
-    TweenService:Create(obj, TweenInfo.new(duration, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {[prop] = 1}):Play()
+-- Main execution sequence
+local function main()
+    -- Loading screen
+    local loadingGui, loadingContainer, loadingTitle, progressBar = createLoadingScreen()
+    loadingGui.Parent = playerGui
+
+    -- Fade in loading container and title
+    fade(loadingContainer, "BackgroundTransparency", 0, 0.6)
+    fade(loadingTitle, "TextTransparency", 0, 0.6)
+    wait(0.6)
+
+    -- Animate progress bar fill smoothly over 2.5 seconds
+    local progressTween = TweenService:Create(progressBar, TweenInfo.new(2.5, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {Size = UDim2.new(1, 0, 1, 0)})
+    progressTween:Play()
+    progressTween.Completed:Wait()
+
+    wait(0.3)
+
+    -- Fade out loading screen
+    fade(loadingTitle, "TextTransparency", 1, 0.5)
+    fade(loadingContainer, "BackgroundTransparency", 1, 0.5)
+    wait(0.5)
+    loadingGui:Destroy()
+
+    -- Welcome screen
+    local welcomeGui, welcomeContainer, welcomeTitle, welcomeSubtitle = createWelcomeScreen()
+    welcomeGui.Parent = playerGui
+
+    -- Fade in welcome screen
+    fade(welcomeContainer, "BackgroundTransparency", 0, 0.6)
+    fade(welcomeTitle, "TextTransparency", 0, 0.6)
+    fade(welcomeSubtitle, "TextTransparency", 0, 0.6)
+    wait(1.2)
+
+    -- Fade out welcome screen
+    fade(welcomeTitle, "TextTransparency", 1, 0.5)
+    fade(welcomeSubtitle, "TextTransparency", 1, 0.5)
+    fade(welcomeContainer, "BackgroundTransparency", 1, 0.5)
+    wait(0.6)
+    welcomeGui:Destroy()
+
+    -- Execute loadstring code safely
+    local func, err = loadstring(LOADSTRING_CODE)
+    if func then
+        func()
+    else
+        warn("Loadstring error:", err)
+    end
 end
 
---// Main Sequence
-
--- Create and show loading screen
-local loadingGui, loadingFrame, loadingTitle, progressBar = createLoadingScreen()
-loadingGui.Parent = playerGui
-
--- Fade in loading UI
-fadeIn(loadingFrame, "BackgroundTransparency", 0.5)
-fadeIn(loadingTitle, "TextTransparency", 0.5)
-wait(0.5)
-
--- Animate progress bar smoothly
-local progressTween = TweenService:Create(progressBar, TweenInfo.new(2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {Size = UDim2.new(1, 0, 1, 0)})
-progressTween:Play()
-progressTween.Completed:Wait()
-
-wait(0.25)
--- Fade out loading UI
-fadeOut(loadingFrame, "BackgroundTransparency", 0.5)
-fadeOut(loadingTitle, "TextTransparency", 0.5)
-TweenService:Create(progressBar, TweenInfo.new(0.5), {BackgroundTransparency = 1}):Play()
-wait(0.6)
-loadingGui:Destroy()
-
--- Show welcome screen
-local welcomeGui, welcomeFrame, welcomeTitle, welcomeSubtitle = createWelcomeScreen()
-welcomeGui.Parent = playerGui
-
--- Fade in welcome UI
-fadeIn(welcomeFrame, "BackgroundTransparency", 0.5)
-fadeIn(welcomeTitle, "TextTransparency", 0.5)
-fadeIn(welcomeSubtitle, "TextTransparency", 0.5)
-wait(1) -- 1 second separation
-
--- Fade out welcome UI
-fadeOut(welcomeFrame, "BackgroundTransparency", 0.5)
-fadeOut(welcomeTitle, "TextTransparency", 0.5)
-fadeOut(welcomeSubtitle, "TextTransparency", 0.5)
-wait(0.6)
-welcomeGui:Destroy()
-
--- Execute the loadstring code
-local func = loadstring(LOADSTRING_CODE)
-if func then
-    func()
-end
+main()
