@@ -7,7 +7,7 @@ local LOADSTRING_CODE = [[
    loadstring(game:HttpGet("https://raw.githubusercontent.com/MADMONEYDISTRO/madmoney-ghost-client/refs/heads/main/yes"))()
 ]]
 
--- Utility function to create rounded frames with shadows
+
 local function createRoundedFrame(parent, size, position, bgColor, cornerRadius, shadow)
     local frame = Instance.new("Frame")
     frame.Size = size
@@ -38,7 +38,7 @@ local function createRoundedFrame(parent, size, position, bgColor, cornerRadius,
     return frame
 end
 
--- Create Loading Screen UI
+
 local function createLoadingScreen()
     local screenGui = Instance.new("ScreenGui")
     screenGui.Name = "LoadingScreen"
@@ -82,7 +82,7 @@ local function createLoadingScreen()
     return screenGui, container, title, progressBar
 end
 
--- Create Welcome Screen UI
+
 local function createWelcomeScreen()
     local screenGui = Instance.new("ScreenGui")
     screenGui.Name = "WelcomeScreen"
@@ -123,7 +123,7 @@ local function createWelcomeScreen()
     return screenGui, container, title, subtitle
 end
 
--- Fade utility
+
 local function fade(obj, prop, goal, duration, style, direction)
     style = style or Enum.EasingStyle.Quad
     direction = direction or Enum.EasingDirection.Out
@@ -133,48 +133,48 @@ local function fade(obj, prop, goal, duration, style, direction)
     return tween
 end
 
--- Main execution sequence
+
 local function main()
-    -- Loading screen
+   
     local loadingGui, loadingContainer, loadingTitle, progressBar = createLoadingScreen()
     loadingGui.Parent = playerGui
 
-    -- Fade in loading container and title
+  
     fade(loadingContainer, "BackgroundTransparency", 0, 0.6)
     fade(loadingTitle, "TextTransparency", 0, 0.6)
     wait(0.6)
 
-    -- Animate progress bar fill smoothly over 2.5 seconds
+
     local progressTween = TweenService:Create(progressBar, TweenInfo.new(2.5, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {Size = UDim2.new(1, 0, 1, 0)})
     progressTween:Play()
     progressTween.Completed:Wait()
 
     wait(0.3)
 
-    -- Fade out loading screen
+   
     fade(loadingTitle, "TextTransparency", 1, 0.5)
     fade(loadingContainer, "BackgroundTransparency", 1, 0.5)
     wait(0.5)
     loadingGui:Destroy()
 
-    -- Welcome screen
+
     local welcomeGui, welcomeContainer, welcomeTitle, welcomeSubtitle = createWelcomeScreen()
     welcomeGui.Parent = playerGui
 
-    -- Fade in welcome screen
+
     fade(welcomeContainer, "BackgroundTransparency", 0, 0.6)
     fade(welcomeTitle, "TextTransparency", 0, 0.6)
     fade(welcomeSubtitle, "TextTransparency", 0, 0.6)
     wait(1.2)
 
-    -- Fade out welcome screen
+  
     fade(welcomeTitle, "TextTransparency", 1, 0.5)
     fade(welcomeSubtitle, "TextTransparency", 1, 0.5)
     fade(welcomeContainer, "BackgroundTransparency", 1, 0.5)
     wait(0.6)
     welcomeGui:Destroy()
 
-    -- Execute loadstring code safely
+   
     local func, err = loadstring(LOADSTRING_CODE)
     if func then
         func()
