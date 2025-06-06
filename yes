@@ -163,7 +163,7 @@ local FEATURES = {
     },
     visual = {
         esp = false,
-        tracers = false,
+        chatspam = false,
         chams = false
     },
     settings = {
@@ -360,7 +360,7 @@ end
                 -- if func then func() end
             end
         end,
-        tracers = function(enabled)
+        chatspam = function(enabled)
             if enabled then
                 print("Executing Tracers script via loadstring...")
                 -- Example: local func = loadstring("print('Tracers enabled logic!')")
