@@ -1,0 +1,695 @@
+-- Trapware UI Library v2.5 (Welcome always on top, notifications, scroll, modern buttons, many themes)
+local Trapware = {}
+Trapware.__index = Trapware
+
+Trapware.Config = {
+    Name = "Trapware",
+    Version = "2.5",
+    Theme = "Default"
+}
+
+Trapware.Themes = {
+    Default = {
+        Background = Color3.fromRGB(30, 30, 30),
+        Foreground = Color3.fromRGB(38, 38, 38),
+        AccentColor = Color3.fromRGB(45, 45, 45),
+        SecondaryAccent = Color3.fromRGB(60, 60, 60),
+        TextColor = Color3.fromRGB(220, 220, 220),
+        ButtonColor = Color3.fromRGB(60, 60, 60),
+        ButtonHover = Color3.fromRGB(90, 90, 90),
+        ToggleOn = Color3.fromRGB(0, 200, 0),
+        ToggleOff = Color3.fromRGB(80, 80, 80),
+        SliderColor = Color3.fromRGB(0, 200, 0)
+    },
+    Light = {
+        Background = Color3.fromRGB(240, 240, 240),
+        Foreground = Color3.fromRGB(220, 220, 220),
+        AccentColor = Color3.fromRGB(200, 200, 200),
+        SecondaryAccent = Color3.fromRGB(180, 180, 180),
+        TextColor = Color3.fromRGB(30, 30, 30),
+        ButtonColor = Color3.fromRGB(200, 200, 200),
+        ButtonHover = Color3.fromRGB(230, 230, 230),
+        ToggleOn = Color3.fromRGB(0, 200, 0),
+        ToggleOff = Color3.fromRGB(180, 180, 180),
+        SliderColor = Color3.fromRGB(0, 200, 0)
+    },
+    Blue = {
+        Background = Color3.fromRGB(25, 30, 50),
+        Foreground = Color3.fromRGB(35, 40, 70),
+        AccentColor = Color3.fromRGB(45, 60, 120),
+        SecondaryAccent = Color3.fromRGB(60, 80, 180),
+        TextColor = Color3.fromRGB(220, 220, 255),
+        ButtonColor = Color3.fromRGB(60, 80, 180),
+        ButtonHover = Color3.fromRGB(80, 100, 220),
+        ToggleOn = Color3.fromRGB(0, 200, 255),
+        ToggleOff = Color3.fromRGB(80, 80, 80),
+        SliderColor = Color3.fromRGB(0, 200, 255)
+    },
+    Red = {
+        Background = Color3.fromRGB(40, 10, 10),
+        Foreground = Color3.fromRGB(80, 20, 20),
+        AccentColor = Color3.fromRGB(120, 30, 30),
+        SecondaryAccent = Color3.fromRGB(200, 50, 50),
+        TextColor = Color3.fromRGB(255, 200, 200),
+        ButtonColor = Color3.fromRGB(200, 50, 50),
+        ButtonHover = Color3.fromRGB(255, 80, 80),
+        ToggleOn = Color3.fromRGB(255, 0, 0),
+        ToggleOff = Color3.fromRGB(80, 80, 80),
+        SliderColor = Color3.fromRGB(255, 0, 0)
+    },
+    Green = {
+        Background = Color3.fromRGB(10, 40, 10),
+        Foreground = Color3.fromRGB(20, 80, 20),
+        AccentColor = Color3.fromRGB(30, 120, 30),
+        SecondaryAccent = Color3.fromRGB(50, 200, 50),
+        TextColor = Color3.fromRGB(200, 255, 200),
+        ButtonColor = Color3.fromRGB(50, 200, 50),
+        ButtonHover = Color3.fromRGB(80, 255, 80),
+        ToggleOn = Color3.fromRGB(0, 255, 0),
+        ToggleOff = Color3.fromRGB(80, 80, 80),
+        SliderColor = Color3.fromRGB(0, 255, 0)
+    },
+    Pink = {
+        Background = Color3.fromRGB(50, 25, 40),
+        Foreground = Color3.fromRGB(70, 35, 60),
+        AccentColor = Color3.fromRGB(120, 45, 90),
+        SecondaryAccent = Color3.fromRGB(200, 50, 150),
+        TextColor = Color3.fromRGB(255, 220, 240),
+        ButtonColor = Color3.fromRGB(200, 50, 150),
+        ButtonHover = Color3.fromRGB(255, 80, 200),
+        ToggleOn = Color3.fromRGB(255, 0, 200),
+        ToggleOff = Color3.fromRGB(80, 80, 80),
+        SliderColor = Color3.fromRGB(255, 0, 200)
+    },
+    Orange = {
+        Background = Color3.fromRGB(50, 35, 10),
+        Foreground = Color3.fromRGB(90, 60, 20),
+        AccentColor = Color3.fromRGB(200, 100, 30),
+        SecondaryAccent = Color3.fromRGB(255, 140, 0),
+        TextColor = Color3.fromRGB(255, 230, 200),
+        ButtonColor = Color3.fromRGB(255, 140, 0),
+        ButtonHover = Color3.fromRGB(255, 180, 80),
+        ToggleOn = Color3.fromRGB(255, 140, 0),
+        ToggleOff = Color3.fromRGB(80, 80, 80),
+        SliderColor = Color3.fromRGB(255, 140, 0)
+    },
+    Purple = {
+        Background = Color3.fromRGB(35, 20, 50),
+        Foreground = Color3.fromRGB(60, 35, 90),
+        AccentColor = Color3.fromRGB(100, 60, 200),
+        SecondaryAccent = Color3.fromRGB(140, 0, 255),
+        TextColor = Color3.fromRGB(230, 200, 255),
+        ButtonColor = Color3.fromRGB(140, 0, 255),
+        ButtonHover = Color3.fromRGB(180, 80, 255),
+        ToggleOn = Color3.fromRGB(140, 0, 255),
+        ToggleOff = Color3.fromRGB(80, 80, 80),
+        SliderColor = Color3.fromRGB(140, 0, 255)
+    },
+    Yellow = {
+        Background = Color3.fromRGB(50, 50, 10),
+        Foreground = Color3.fromRGB(90, 90, 20),
+        AccentColor = Color3.fromRGB(200, 200, 30),
+        SecondaryAccent = Color3.fromRGB(255, 255, 0),
+        TextColor = Color3.fromRGB(255, 255, 200),
+        ButtonColor = Color3.fromRGB(255, 255, 0),
+        ButtonHover = Color3.fromRGB(255, 255, 80),
+        ToggleOn = Color3.fromRGB(255, 255, 0),
+        ToggleOff = Color3.fromRGB(80, 80, 80),
+        SliderColor = Color3.fromRGB(255, 255, 0)
+    },
+    Teal = {
+        Background = Color3.fromRGB(10, 50, 50),
+        Foreground = Color3.fromRGB(20, 90, 90),
+        AccentColor = Color3.fromRGB(30, 200, 200),
+        SecondaryAccent = Color3.fromRGB(0, 255, 255),
+        TextColor = Color3.fromRGB(200, 255, 255),
+        ButtonColor = Color3.fromRGB(0, 255, 255),
+        ButtonHover = Color3.fromRGB(80, 255, 255),
+        ToggleOn = Color3.fromRGB(0, 255, 255),
+        ToggleOff = Color3.fromRGB(80, 80, 80),
+        SliderColor = Color3.fromRGB(0, 255, 255)
+    },
+    Gray = {
+        Background = Color3.fromRGB(60, 60, 60),
+        Foreground = Color3.fromRGB(80, 80, 80),
+        AccentColor = Color3.fromRGB(100, 100, 100),
+        SecondaryAccent = Color3.fromRGB(120, 120, 120),
+        TextColor = Color3.fromRGB(220, 220, 220),
+        ButtonColor = Color3.fromRGB(120, 120, 120),
+        ButtonHover = Color3.fromRGB(160, 160, 160),
+        ToggleOn = Color3.fromRGB(200, 200, 200),
+        ToggleOff = Color3.fromRGB(80, 80, 80),
+        SliderColor = Color3.fromRGB(200, 200, 200)
+    },
+    Brown = {
+        Background = Color3.fromRGB(60, 40, 20),
+        Foreground = Color3.fromRGB(80, 60, 40),
+        AccentColor = Color3.fromRGB(120, 80, 40),
+        SecondaryAccent = Color3.fromRGB(160, 120, 80),
+        TextColor = Color3.fromRGB(255, 240, 220),
+        ButtonColor = Color3.fromRGB(160, 120, 80),
+        ButtonHover = Color3.fromRGB(200, 160, 120),
+        ToggleOn = Color3.fromRGB(160, 120, 80),
+        ToggleOff = Color3.fromRGB(80, 80, 80),
+        SliderColor = Color3.fromRGB(160, 120, 80)
+    },
+    Aqua = {
+        Background = Color3.fromRGB(20, 60, 60),
+        Foreground = Color3.fromRGB(40, 120, 120),
+        AccentColor = Color3.fromRGB(60, 200, 200),
+        SecondaryAccent = Color3.fromRGB(80, 255, 255),
+        TextColor = Color3.fromRGB(220, 255, 255),
+        ButtonColor = Color3.fromRGB(80, 255, 255),
+        ButtonHover = Color3.fromRGB(120, 255, 255),
+        ToggleOn = Color3.fromRGB(80, 255, 255),
+        ToggleOff = Color3.fromRGB(80, 80, 80),
+        SliderColor = Color3.fromRGB(80, 255, 255)
+    }
+}
+
+local TweenService = game:GetService("TweenService")
+
+local function applyRoundedCorners(instance, radius)
+    local corner = Instance.new("UICorner")
+    corner.CornerRadius = UDim.new(0, radius)
+    corner.Parent = instance
+    return corner
+end
+
+local function applyDropShadow(instance)
+    local shadow = Instance.new("ImageLabel")
+    shadow.Name = "Shadow"
+    shadow.BackgroundTransparency = 1
+    shadow.Image = "rbxassetid://1316045217"
+    shadow.Size = UDim2.new(1, 36, 1, 36)
+    shadow.Position = UDim2.new(0, -18, 0, -18)
+    shadow.ImageTransparency = 0.7
+    shadow.ZIndex = 0
+    shadow.Parent = instance
+    return shadow
+end
+
+Trapware.UI = {}
+
+function Trapware.UI:CreateWindow(config)
+    local window = {}
+    window.Title = config.Title or Trapware.Config.Name
+    window.Size = config.Size or Vector2.new(600, 400)
+    window.Position = config.Position or Vector2.new(100, 100)
+    window.Theme = config.Theme or Trapware.Config.Theme
+    window.Tabs = {}
+    window.CurrentTab = nil
+
+    window.Instance = Instance.new("ScreenGui")
+    window.Instance.Name = window.Title
+    window.Instance.ResetOnSpawn = false
+
+    window.MainFrame = Instance.new("Frame")
+    window.MainFrame.Name = "MainFrame"
+    window.MainFrame.Size = UDim2.new(0, window.Size.X, 0, window.Size.Y)
+    window.MainFrame.Position = UDim2.new(0, window.Position.X, 0, window.Position.Y)
+    window.MainFrame.BackgroundColor3 = Trapware.Themes[window.Theme].Background
+    window.MainFrame.BorderSizePixel = 0
+    window.MainFrame.Parent = window.Instance
+    window.MainFrame.ZIndex = 2
+
+    applyRoundedCorners(window.MainFrame, 10)
+    applyDropShadow(window.MainFrame)
+
+    window.TitleBar = Instance.new("Frame")
+    window.TitleBar.Name = "TitleBar"
+    window.TitleBar.Size = UDim2.new(1, 0, 0, 40)
+    window.TitleBar.BackgroundColor3 = Trapware.Themes[window.Theme].AccentColor
+    window.TitleBar.BorderSizePixel = 0
+    window.TitleBar.Parent = window.MainFrame
+    window.TitleBar.ZIndex = 3
+
+    local titleCorner = Instance.new("UICorner")
+    titleCorner.CornerRadius = UDim.new(0, 10)
+    titleCorner.Parent = window.TitleBar
+
+    local Players = game:GetService("Players")
+    local player = Players.LocalPlayer
+    local thumbUrl = Players:GetUserThumbnailAsync(player.UserId, Enum.ThumbnailType.HeadShot, Enum.ThumbnailSize.Size48x48)
+    local profileImage = Instance.new("ImageLabel")
+    profileImage.Name = "ProfileImage"
+    profileImage.Size = UDim2.new(0, 28, 0, 28)
+    profileImage.Position = UDim2.new(0, 6, 0.5, -14)
+    profileImage.BackgroundTransparency = 1
+    profileImage.Image = thumbUrl
+    profileImage.ZIndex = 4
+    profileImage.Parent = window.TitleBar
+    applyRoundedCorners(profileImage, 14)
+
+    window.TitleText = Instance.new("TextLabel")
+    window.TitleText.Name = "TitleText"
+    window.TitleText.Size = UDim2.new(1, -90, 1, 0)
+    window.TitleText.Position = UDim2.new(0, 38, 0, 0)
+    window.TitleText.BackgroundTransparency = 1
+    window.TitleText.TextColor3 = Trapware.Themes[window.Theme].TextColor
+    window.TitleText.TextXAlignment = Enum.TextXAlignment.Left
+    window.TitleText.Font = Enum.Font.GothamBold
+    window.TitleText.Text = window.Title .. " v" .. Trapware.Config.Version
+    window.TitleText.TextSize = 20
+    window.TitleText.ZIndex = 4
+    window.TitleText.Parent = window.TitleBar
+
+    window.CloseButton = Instance.new("TextButton")
+    window.CloseButton.Name = "CloseButton"
+    window.CloseButton.Size = UDim2.new(0, 34, 0, 34)
+    window.CloseButton.Position = UDim2.new(1, -38, 0.5, -17)
+    window.CloseButton.BackgroundColor3 = Trapware.Themes[window.Theme].SecondaryAccent
+    window.CloseButton.AutoButtonColor = false
+    window.CloseButton.TextColor3 = Trapware.Themes[window.Theme].TextColor
+    window.CloseButton.Text = "×"
+    window.CloseButton.Font = Enum.Font.GothamBold
+    window.CloseButton.TextSize = 22
+    window.CloseButton.ZIndex = 4
+    window.CloseButton.Parent = window.TitleBar
+    applyRoundedCorners(window.CloseButton, 17)
+
+    window.CloseButton.MouseButton1Click:Connect(function()
+        window.Instance:Destroy()
+    end)
+
+    window.TabContainer = Instance.new("Frame")
+    window.TabContainer.Name = "TabContainer"
+    window.TabContainer.Size = UDim2.new(0, 130, 1, -40)
+    window.TabContainer.Position = UDim2.new(0, 0, 0, 40)
+    window.TabContainer.BackgroundColor3 = Trapware.Themes[window.Theme].Foreground
+    window.TabContainer.BorderSizePixel = 0
+    window.TabContainer.ZIndex = 2
+    window.TabContainer.Parent = window.MainFrame
+
+    window.ContentContainer = Instance.new("Frame")
+    window.ContentContainer.Name = "ContentContainer"
+    window.ContentContainer.Size = UDim2.new(1, -130, 1, -40)
+    window.ContentContainer.Position = UDim2.new(0, 130, 0, 40)
+    window.ContentContainer.BackgroundColor3 = Trapware.Themes[window.Theme].Background
+    window.ContentContainer.BorderSizePixel = 0
+    window.ContentContainer.ZIndex = 2
+    window.ContentContainer.Parent = window.MainFrame
+
+    -- Social Buttons Container (bottom left, above undetected)
+    local socialButtonsFrame = Instance.new("Frame")
+    socialButtonsFrame.Size = UDim2.new(0, 120, 0, 100)
+    socialButtonsFrame.Position = UDim2.new(0, 10, 1, -134)
+    socialButtonsFrame.BackgroundTransparency = 1
+    socialButtonsFrame.ZIndex = 5
+    socialButtonsFrame.Parent = window.MainFrame
+
+    local listLayout = Instance.new("UIListLayout")
+    listLayout.Parent = socialButtonsFrame
+    listLayout.SortOrder = Enum.SortOrder.LayoutOrder
+    listLayout.Padding = UDim.new(0, 4)
+
+    local buttonNames = {"YouTube", "Discord", "Website"}
+    local buttonColors = {
+        Color3.fromRGB(255, 0, 0),      -- YouTube (red)
+        Color3.fromRGB(114, 137, 218),  -- Discord (blurple)
+        Color3.fromRGB(0, 170, 255)     -- Website (blue)
+    }
+    local buttonLinks = {
+        "https://youtube.com/",   -- Replace with your actual links
+        "https://discord.com/",
+        "https://yourwebsite.com/"
+    }
+
+    for i = 1, 3 do
+        local btn = Instance.new("TextButton")
+        btn.Size = UDim2.new(1, 0, 0, 28)
+        btn.BackgroundColor3 = buttonColors[i]
+        btn.TextColor3 = Color3.new(1,1,1)
+        btn.Text = buttonNames[i]
+        btn.Font = Enum.Font.GothamBold
+        btn.TextSize = 12
+        btn.Parent = socialButtonsFrame
+        btn.ZIndex = 6
+        applyRoundedCorners(btn, 8)
+        btn.MouseButton1Click:Connect(function()
+            if setclipboard then
+                setclipboard(buttonLinks[i])
+            end
+        end)
+    end
+
+    -- "Undetected" Indicator (bottom left)
+    local undetectedFrame = Instance.new("Frame")
+    undetectedFrame.Size = UDim2.new(0, 120, 0, 24)
+    undetectedFrame.Position = UDim2.new(0, 10, 1, -34)
+    undetectedFrame.BackgroundTransparency = 1
+    undetectedFrame.ZIndex = 5
+    undetectedFrame.Parent = window.MainFrame
+
+    local greenDot = Instance.new("Frame")
+    greenDot.Size = UDim2.new(0, 16, 0, 16)
+    greenDot.Position = UDim2.new(0, 0, 0.5, -8)
+    greenDot.BackgroundColor3 = Color3.fromRGB(0, 255, 0)
+    greenDot.BorderSizePixel = 0
+    greenDot.ZIndex = 6
+    greenDot.Parent = undetectedFrame
+    applyRoundedCorners(greenDot, 8)
+
+    local undetectedText = Instance.new("TextLabel")
+    undetectedText.Size = UDim2.new(1, -20, 1, 0)
+    undetectedText.Position = UDim2.new(0, 20, 0, 0)
+    undetectedText.BackgroundTransparency = 1
+    undetectedText.TextColor3 = Color3.fromRGB(0, 255, 0)
+    undetectedText.Text = "Undetected"
+    undetectedText.Font = Enum.Font.GothamSemibold
+    undetectedText.TextSize = 16
+    undetectedText.TextXAlignment = Enum.TextXAlignment.Left
+    undetectedText.ZIndex = 6
+    undetectedText.Parent = undetectedFrame
+
+    -- Tab system
+    function window:AddTab(tabName, scrollable)
+        local tab = {}
+        tab.Name = tabName
+        tab.Button = Instance.new("TextButton")
+        tab.Button.Size = UDim2.new(1, 0, 0, 38)
+        tab.Button.BackgroundColor3 = Trapware.Themes[window.Theme].ButtonColor
+        tab.Button.TextColor3 = Trapware.Themes[window.Theme].TextColor
+        tab.Button.Text = tabName
+        tab.Button.Font = Enum.Font.GothamBold
+        tab.Button.TextSize = 16
+        tab.Button.AutoButtonColor = false
+        tab.Button.Parent = window.TabContainer
+        tab.Button.ZIndex = 3
+        applyRoundedCorners(tab.Button, 6)
+
+        tab.Content = Instance.new(scrollable and "ScrollingFrame" or "Frame")
+        tab.Content.Size = UDim2.new(1, 0, 1, 0)
+        tab.Content.Position = UDim2.new(0, 0, 0, 0)
+        tab.Content.BackgroundTransparency = 1
+        tab.Content.Visible = false
+        tab.Content.Parent = window.ContentContainer
+        tab.Content.ZIndex = 3
+        if scrollable then
+            tab.Content.CanvasSize = UDim2.new(0, 0, 0, 0)
+            tab.Content.ScrollBarThickness = 6
+            tab.Content.ScrollBarImageColor3 = Trapware.Themes[window.Theme].AccentColor
+        end
+
+        -- Insert Welcome tab always at index 1, others after
+        if tabName == "Welcome" then
+            table.insert(window.Tabs, 1, tab)
+        else
+            table.insert(window.Tabs, tab)
+        end
+        -- Reposition all tab buttons
+        for i, t in ipairs(window.Tabs) do
+            t.Button.Position = UDim2.new(0, 0, 0, (i-1)*38)
+        end
+
+        function tab:Show()
+            for _, t in ipairs(window.Tabs) do
+                t.Content.Visible = false
+                t.Button.BackgroundColor3 = Trapware.Themes[window.Theme].ButtonColor
+            end
+            tab.Content.Visible = true
+            tab.Button.BackgroundColor3 = Trapware.Themes[window.Theme].ButtonHover
+            window.CurrentTab = tab
+        end
+
+        tab.Button.MouseButton1Click:Connect(function()
+            tab:Show()
+        end)
+
+        -- Show Welcome tab by default
+        if #window.Tabs == 1 or tabName == "Welcome" then
+            tab:Show()
+        end
+
+        tab.Layout = Instance.new("UIListLayout")
+        tab.Layout.Padding = UDim.new(0, 12)
+        tab.Layout.SortOrder = Enum.SortOrder.LayoutOrder
+        tab.Layout.Parent = tab.Content
+
+        if scrollable then
+            tab.Layout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
+                tab.Content.CanvasSize = UDim2.new(0, 0, 0, tab.Layout.AbsoluteContentSize.Y + 12)
+            end)
+        end
+
+        -- Modern/Nicer Button
+        function tab:AddButton(text, callback)
+            local btn = Instance.new("TextButton")
+            btn.Size = UDim2.new(1, -40, 0, 40)
+            btn.BackgroundColor3 = Trapware.Themes[window.Theme].ButtonColor
+            btn.TextColor3 = Trapware.Themes[window.Theme].TextColor
+            btn.Text = text
+            btn.Font = Enum.Font.GothamSemibold
+            btn.TextSize = 18
+            btn.AutoButtonColor = false
+            btn.Parent = tab.Content
+            btn.ZIndex = 4
+            applyRoundedCorners(btn, 10)
+            applyDropShadow(btn)
+            btn.MouseEnter:Connect(function()
+                TweenService:Create(btn, TweenInfo.new(0.15), {BackgroundColor3 = Trapware.Themes[window.Theme].ButtonHover}):Play()
+            end)
+            btn.MouseLeave:Connect(function()
+                TweenService:Create(btn, TweenInfo.new(0.15), {BackgroundColor3 = Trapware.Themes[window.Theme].ButtonColor}):Play()
+            end)
+            btn.MouseButton1Click:Connect(function()
+                if callback then callback() end
+            end)
+        end
+
+        function tab:AddToggle(text, default, callback)
+            local toggleFrame = Instance.new("Frame")
+            toggleFrame.Size = UDim2.new(1, -40, 0, 40)
+            toggleFrame.BackgroundTransparency = 1
+            toggleFrame.Parent = tab.Content
+            toggleFrame.ZIndex = 4
+
+            local toggleBtn = Instance.new("TextButton")
+            toggleBtn.Size = UDim2.new(0, 40, 0, 40)
+            toggleBtn.Position = UDim2.new(0, 0, 0, 0)
+            toggleBtn.BackgroundColor3 = default and Trapware.Themes[window.Theme].ToggleOn or Trapware.Themes[window.Theme].ToggleOff
+            toggleBtn.Text = ""
+            toggleBtn.Parent = toggleFrame
+            toggleBtn.ZIndex = 5
+            applyRoundedCorners(toggleBtn, 20)
+
+            local toggleLbl = Instance.new("TextLabel")
+            toggleLbl.Size = UDim2.new(1, -48, 1, 0)
+            toggleLbl.Position = UDim2.new(0, 48, 0, 0)
+            toggleLbl.BackgroundTransparency = 1
+            toggleLbl.TextColor3 = Trapware.Themes[window.Theme].TextColor
+            toggleLbl.Text = text
+            toggleLbl.Font = Enum.Font.Gotham
+            toggleLbl.TextSize = 18
+            toggleLbl.TextXAlignment = Enum.TextXAlignment.Left
+            toggleLbl.Parent = toggleFrame
+            toggleLbl.ZIndex = 5
+
+            local state = default
+            toggleBtn.MouseButton1Click:Connect(function()
+                state = not state
+                toggleBtn.BackgroundColor3 = state and Trapware.Themes[window.Theme].ToggleOn or Trapware.Themes[window.Theme].ToggleOff
+                if callback then callback(state) end
+            end)
+        end
+
+        function tab:AddLabel(text, size)
+            local lbl = Instance.new("TextLabel")
+            lbl.Size = UDim2.new(1, -40, 0, size or 32)
+            lbl.BackgroundTransparency = 1
+            lbl.TextColor3 = Trapware.Themes[window.Theme].TextColor
+            lbl.Text = text
+            lbl.Font = Enum.Font.GothamBold
+            lbl.TextSize = 20
+            lbl.TextXAlignment = Enum.TextXAlignment.Left
+            lbl.Parent = tab.Content
+            lbl.ZIndex = 4
+            return lbl
+        end
+
+        return tab
+    end
+
+    local dragging, dragInput, dragStart, startPos
+    window.TitleBar.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 then
+            dragging = true
+            dragStart = input.Position
+            startPos = window.MainFrame.Position
+            input.Changed:Connect(function()
+                if input.UserInputState == Enum.UserInputState.End then
+                    dragging = false
+                end
+            end)
+        end
+    end)
+    window.TitleBar.InputChanged:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseMovement then
+            dragInput = input
+        end
+    end)
+    game:GetService("UserInputService").InputChanged:Connect(function(input)
+        if input == dragInput and dragging then
+            local delta = input.Position - dragStart
+            window.MainFrame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X,
+                                                  startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+        end
+    end)
+
+    window.Instance.Parent = game:GetService("Players").LocalPlayer.PlayerGui
+
+    function window:ApplyTheme(themeName)
+        local theme = Trapware.Themes[themeName]
+        if not theme then return end
+        window.Theme = themeName
+        window.MainFrame.BackgroundColor3 = theme.Background
+        window.TitleBar.BackgroundColor3 = theme.AccentColor
+        window.TabContainer.BackgroundColor3 = theme.Foreground
+        window.ContentContainer.BackgroundColor3 = theme.Background
+        window.TitleText.TextColor3 = theme.TextColor
+        window.CloseButton.BackgroundColor3 = theme.SecondaryAccent
+        window.CloseButton.TextColor3 = theme.TextColor
+        for _, tab in ipairs(window.Tabs) do
+            tab.Button.BackgroundColor3 = theme.ButtonColor
+            tab.Button.TextColor3 = theme.TextColor
+            for _, child in ipairs(tab.Content:GetChildren()) do
+                if child:IsA("TextLabel") or child:IsA("TextButton") then
+                    child.TextColor3 = theme.TextColor
+                    if child:IsA("TextButton") then
+                        child.BackgroundColor3 = theme.ButtonColor
+                    end
+                end
+            end
+        end
+    end
+
+    return window
+end
+
+-- Notification UI for Trapware
+local function showNotification(window, message)
+    local theme = Trapware.Themes[window.Theme] or Trapware.Themes.Default
+    local gui = window.Instance
+
+    if gui:FindFirstChild("TrapwareNotification") then
+        gui.TrapwareNotification:Destroy()
+    end
+
+    local notif = Instance.new("Frame")
+    notif.Name = "TrapwareNotification"
+    notif.AnchorPoint = Vector2.new(1,1)
+    notif.Size = UDim2.new(0, 260, 0, 60)
+    notif.Position = UDim2.new(1, 300, 1, -20)
+    notif.BackgroundColor3 = theme.AccentColor
+    notif.BorderSizePixel = 0
+    notif.BackgroundTransparency = 0.05
+    notif.Parent = gui
+    notif.ZIndex = 100
+    applyRoundedCorners(notif, 10)
+
+    local notifLabel = Instance.new("TextLabel")
+    notifLabel.Size = UDim2.new(1, -20, 0, 36)
+    notifLabel.Position = UDim2.new(0, 10, 0, 4)
+    notifLabel.BackgroundTransparency = 1
+    notifLabel.TextColor3 = theme.TextColor
+    notifLabel.Text = message
+    notifLabel.Font = Enum.Font.GothamBold
+    notifLabel.TextSize = 20
+    notifLabel.TextXAlignment = Enum.TextXAlignment.Left
+    notifLabel.Parent = notif
+    notifLabel.ZIndex = 101
+
+    local progressBar = Instance.new("Frame")
+    progressBar.Size = UDim2.new(1, -20, 0, 8)
+    progressBar.Position = UDim2.new(0, 10, 1, -16)
+    progressBar.BackgroundColor3 = theme.SliderColor
+    progressBar.BorderSizePixel = 0
+    progressBar.Parent = notif
+    progressBar.ZIndex = 101
+    applyRoundedCorners(progressBar, 4)
+
+    -- Slide in
+    notif:TweenPosition(UDim2.new(1, -20, 1, -20), "Out", "Quad", 0.25, true)
+
+    -- Progress bar animation
+    local start = tick()
+    local duration = 3
+    local run = true
+
+    spawn(function()
+        while run do
+            local elapsed = tick() - start
+            local ratio = math.clamp(1 - (elapsed / duration), 0, 1)
+            progressBar.Size = UDim2.new(ratio, -20 * (1-ratio), 0, 8)
+            if ratio <= 0 then break end
+            game:GetService("RunService").RenderStepped:Wait()
+        end
+        -- Slide out
+        notif:TweenPosition(UDim2.new(1, 300, 1, -20), "In", "Quad", 0.3, true)
+        wait(0.3)
+        notif:Destroy()
+    end)
+end
+
+-- Example usage
+local win = Trapware.UI:CreateWindow({Title = "Trapware"})
+
+-- Welcome Tab (ALWAYS CREATE FIRST)
+local welcomeTab = win:AddTab("Welcome")
+local Players = game:GetService("Players")
+local player = Players.LocalPlayer
+local welcomeLabel = welcomeTab:AddLabel("Welcome, " .. player.DisplayName .. " (@" .. player.Name .. ")!", 32)
+local fpsLabel = welcomeTab:AddLabel("FPS: ...", 28)
+local pingLabel = welcomeTab:AddLabel("Ping: ...", 28)
+local RunService = game:GetService("RunService")
+local lastTime, frames = tick(), 0
+RunService.RenderStepped:Connect(function()
+    frames = frames + 1
+    local now = tick()
+    if now - lastTime >= 1 then
+        fpsLabel.Text = "FPS: " .. frames
+        frames = 0
+        lastTime = now
+    end
+end)
+local function updatePing()
+    local stats = Players.LocalPlayer:FindFirstChild("NetworkClient")
+    local pingValue = math.random(30, 60)
+    local success, result = pcall(function()
+        return game:GetService("Stats"):FindFirstChild("PerformanceStats")
+    end)
+    if success and result then
+        local net = result:FindFirstChild("Data Ping")
+        if net then
+            pingValue = math.floor(net:GetValue())
+        end
+    end
+    pingLabel.Text = "Ping: " .. pingValue .. " ms"
+end
+game:GetService("RunService").Heartbeat:Connect(function()
+    updatePing()
+end)
+
+-- Main Tab with notification and scroll
+local mainTab = win:AddTab("Main", true)
+local function mainNotify(feature)
+    showNotification(win, feature .. " enabled")
+end
+mainTab:AddButton("Aimbot", function() mainNotify("Aimbot") end)
+mainTab:AddButton("Speed", function() mainNotify("Speed") end)
+mainTab:AddButton("Kill All", function() mainNotify("Kill All") end)
+mainTab:AddButton("ESP", function() mainNotify("ESP") end)
+mainTab:AddButton("Fly", function() mainNotify("Fly") end)
+
+-- Settings Tab with scroll and notifications for theme buttons
+local settingsTab = win:AddTab("Settings", true)
+settingsTab:AddLabel("Theme:", 24)
+for themeName, _ in pairs(Trapware.Themes) do
+    settingsTab:AddButton(themeName, function()
+        win:ApplyTheme(themeName)
+        showNotification(win, themeName.." theme enabled")
+    end)
+end
+settingsTab:AddLabel("Other Settings Coming Soon...", 24)
+
+return Trapware
