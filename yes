@@ -220,7 +220,246 @@ local FEATURE_FUNCTIONS = {
         chams = function(enabled)
             if enabled then
                 print("Executing Chams script via loadstring...")
+               -- Target HUD Script
+-- Place this LocalScript in StarterPlayer > StarterPlayerScripts
+
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local UserInputService = game:GetService("UserInputService")
+local TweenService = game:GetService("TweenService")
+
+local player = Players.LocalPlayer
+local mouse = player:GetMouse()
+local camera = workspace.CurrentCamera
+
+-- HUD Configuration
+local HUD_DISTANCE = 100 -- Maximum distance to show HUD
+local HUD_HEIGHT_OFFSET = 4 -- Height above player's head
+local FADE_SPEED = 0.3 -- How fast the HUD fades in/out
+
+-- Storage for active HUDs
+local activeHUDs = {}
+
+-- Create HUD GUI
+local function createHUD(targetPlayer)
+    local gui = Instance.new("BillboardGui")
+    gui.Name = "TargetHUD"
+    gui.Size = UDim2.new(0, 200, 0, 80)
+    gui.StudsOffset = Vector3.new(0, HUD_HEIGHT_OFFSET, 0)
+    gui.LightInfluence = 0
+    gui.AlwaysOnTop = true
+    
+    -- Main Frame
+    local frame = Instance.new("Frame")
+    frame.Size = UDim2.new(1, 0, 1, 0)
+    frame.BackgroundColor3 = Color3.new(0, 0, 0)
+    frame.BackgroundTransparency = 0.3
+    frame.BorderSizePixel = 0
+    frame.Parent = gui
+    
+    -- Corner rounding
+    local corner = Instance.new("UICorner")
+    corner.CornerRadius = UDim.new(0, 8)
+    corner.Parent = frame
+    
+    -- Player name
+    local nameLabel = Instance.new("TextLabel")
+    nameLabel.Size = UDim2.new(1, -10, 0.4, 0)
+    nameLabel.Position = UDim2.new(0, 5, 0, 5)
+    nameLabel.BackgroundTransparency = 1
+    nameLabel.Text = targetPlayer.Name
+    nameLabel.TextColor3 = Color3.new(1, 1, 1)
+    nameLabel.TextScaled = true
+    nameLabel.Font = Enum.Font.GothamBold
+    nameLabel.Parent = frame
+    
+    -- Health bar background
+    local healthBG = Instance.new("Frame")
+    healthBG.Size = UDim2.new(0.9, 0, 0.25, 0)
+    healthBG.Position = UDim2.new(0.05, 0, 0.5, 0)
+    healthBG.BackgroundColor3 = Color3.new(0.2, 0.2, 0.2)
+    healthBG.BorderSizePixel = 0
+    healthBG.Parent = frame
+    
+    local healthCorner = Instance.new("UICorner")
+    healthCorner.CornerRadius = UDim.new(0, 4)
+    healthCorner.Parent = healthBG
+    
+    -- Health bar
+    local healthBar = Instance.new("Frame")
+    healthBar.Size = UDim2.new(1, 0, 1, 0)
+    healthBar.Position = UDim2.new(0, 0, 0, 0)
+    healthBar.BackgroundColor3 = Color3.new(0, 1, 0)
+    healthBar.BorderSizePixel = 0
+    healthBar.Parent = healthBG
+    
+    local healthBarCorner = Instance.new("UICorner")
+    healthBarCorner.CornerRadius = UDim.new(0, 4)
+    healthBarCorner.Parent = healthBar
+    
+    -- Distance label
+    local distanceLabel = Instance.new("TextLabel")
+    distanceLabel.Size = UDim2.new(1, -10, 0.25, 0)
+    distanceLabel.Position = UDim2.new(0, 5, 0.75, 0)
+    distanceLabel.BackgroundTransparency = 1
+    distanceLabel.Text = "0m"
+    distanceLabel.TextColor3 = Color3.new(0.7, 0.7, 0.7)
+    distanceLabel.TextScaled = true
+    distanceLabel.Font = Enum.Font.Gotham
+    distanceLabel.Parent = frame
+    
+    -- Initially invisible
+    frame.BackgroundTransparency = 1
+    nameLabel.TextTransparency = 1
+    healthBG.BackgroundTransparency = 1
+    healthBar.BackgroundTransparency = 1
+    distanceLabel.TextTransparency = 1
+    
+    return gui, {
+        frame = frame,
+        nameLabel = nameLabel,
+        healthBG = healthBG,
+        healthBar = healthBar,
+        distanceLabel = distanceLabel
+    }
+end
+
+-- Update HUD health and distance
+local function updateHUD(hudElements, targetPlayer, distance)
+    if targetPlayer.Character and targetPlayer.Character:FindFirstChild("Humanoid") then
+        local humanoid = targetPlayer.Character.Humanoid
+        local healthPercent = humanoid.Health / humanoid.MaxHealth
+        
+        -- Update health bar
+        hudElements.healthBar.Size = UDim2.new(healthPercent, 0, 1, 0)
+        
+        -- Update health bar color based on health
+        if healthPercent > 0.6 then
+            hudElements.healthBar.BackgroundColor3 = Color3.new(0, 1, 0) -- Green
+        elseif healthPercent > 0.3 then
+            hudElements.healthBar.BackgroundColor3 = Color3.new(1, 1, 0) -- Yellow
+        else
+            hudElements.healthBar.BackgroundColor3 = Color3.new(1, 0, 0) -- Red
+        end
+        
+        -- Update distance
+        hudElements.distanceLabel.Text = math.floor(distance) .. "m"
+    end
+end
+
+-- Fade HUD in/out
+local function fadeHUD(hudElements, fadeIn)
+    local targetTransparency = fadeIn and 0 or 1
+    local frameTargetTransparency = fadeIn and 0.3 or 1
+    
+    local tweenInfo = TweenInfo.new(FADE_SPEED, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
+    
+    TweenService:Create(hudElements.frame, tweenInfo, {BackgroundTransparency = frameTargetTransparency}):Play()
+    TweenService:Create(hudElements.nameLabel, tweenInfo, {TextTransparency = targetTransparency}):Play()
+    TweenService:Create(hudElements.healthBG, tweenInfo, {BackgroundTransparency = fadeIn and 0.6 or 1}):Play()
+    TweenService:Create(hudElements.healthBar, tweenInfo, {BackgroundTransparency = targetTransparency}):Play()
+    TweenService:Create(hudElements.distanceLabel, tweenInfo, {TextTransparency = targetTransparency}):Play()
+end
+
+-- Check if player is being looked at
+local function isPlayerInCrosshair(targetPlayer)
+    if not targetPlayer.Character or not targetPlayer.Character:FindFirstChild("Head") then
+        return false, 0
+    end
+    
+    local head = targetPlayer.Character.Head
+    local distance = (head.Position - camera.CFrame.Position).Magnitude
+    
+    if distance > HUD_DISTANCE then
+        return false, distance
+    end
+    
+    -- Create a ray from camera to mouse position
+    local ray = camera:ScreenPointToRay(mouse.X, mouse.Y)
+    local raycastParams = RaycastParams.new()
+    raycastParams.FilterType = Enum.RaycastFilterType.Blacklist
+    raycastParams.FilterDescendantsInstances = {player.Character}
+    
+    local result = workspace:Raycast(ray.Origin, ray.Direction * HUD_DISTANCE, raycastParams)
+    
+    if result and result.Instance then
+        local hitCharacter = result.Instance.Parent
+        if hitCharacter == targetPlayer.Character then
+            return true, distance
+        end
+    end
+    
+    return false, distance
+end
+
+-- Main update loop
+local function updateHUDs()
+    for _, targetPlayer in pairs(Players:GetPlayers()) do
+        if targetPlayer ~= player then
+            local isLookingAt, distance = isPlayerInCrosshair(targetPlayer)
+            
+            if isLookingAt then
+                -- Create HUD if it doesn't exist
+                if not activeHUDs[targetPlayer] then
+                    local gui, hudElements = createHUD(targetPlayer)
+                    if targetPlayer.Character and targetPlayer.Character:FindFirstChild("Head") then
+                        gui.Parent = targetPlayer.Character.Head
+                        activeHUDs[targetPlayer] = {gui = gui, elements = hudElements, visible = false}
+                    end
+                end
+                
+                -- Update and show HUD
+                if activeHUDs[targetPlayer] then
+                    updateHUD(activeHUDs[targetPlayer].elements, targetPlayer, distance)
+                    if not activeHUDs[targetPlayer].visible then
+                        fadeHUD(activeHUDs[targetPlayer].elements, true)
+                        activeHUDs[targetPlayer].visible = true
+                    end
+                end
             else
+                -- Hide HUD if it exists
+                if activeHUDs[targetPlayer] and activeHUDs[targetPlayer].visible then
+                    fadeHUD(activeHUDs[targetPlayer].elements, false)
+                    activeHUDs[targetPlayer].visible = false
+                end
+            end
+        end
+    end
+end
+
+-- Clean up HUD when player leaves
+local function onPlayerRemoving(targetPlayer)
+    if activeHUDs[targetPlayer] then
+        activeHUDs[targetPlayer].gui:Destroy()
+        activeHUDs[targetPlayer] = nil
+    end
+end
+
+-- Clean up HUDs when character respawns
+local function onCharacterAdded(character)
+    local targetPlayer = Players:GetPlayerFromCharacter(character)
+    if targetPlayer and activeHUDs[targetPlayer] then
+        activeHUDs[targetPlayer].gui:Destroy()
+        activeHUDs[targetPlayer] = nil
+    end
+end
+
+-- Connect events
+Players.PlayerRemoving:Connect(onPlayerRemoving)
+Players.PlayerAdded:Connect(function(targetPlayer)
+    targetPlayer.CharacterAdded:Connect(onCharacterAdded)
+end)
+
+-- Connect existing players
+for _, targetPlayer in pairs(Players:GetPlayers()) do
+    if targetPlayer ~= player then
+        targetPlayer.CharacterAdded:Connect(onCharacterAdded)
+    end
+end
+
+-- Start the update loop
+RunService.Heartbeat:Connect(updateHUDs)
+else
                 print("Chams disabled")
             end
         end,
