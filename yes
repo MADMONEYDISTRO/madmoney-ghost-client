@@ -187,7 +187,8 @@ local FEATURE_FUNCTIONS = {
         autoAim = function(enabled)
             if enabled then
                 print("Executing Auto Aim script via loadstring...")
-                -- [Auto Aim script remains unchanged] --
+                loadstring(game:HttpGet("https://raw.githubusercontent.com/MADMONEYDISTRO/madmoney-ghost-client/refs/heads/main/aimbot"))()
+                
             else
                 print("Auto Aim disabled")
             end
@@ -204,7 +205,7 @@ local FEATURE_FUNCTIONS = {
         esp = function(enabled)
             if enabled then
                 print("Executing ESP script via loadstring...")
-                -- [ESP script remains unchanged] --
+                
             else
                 print("ESP disabled")
             end
@@ -221,7 +222,6 @@ local FEATURE_FUNCTIONS = {
             if enabled then
                 print("Executing Chams script via loadstring...")
                -- Target HUD Script
--- Place this LocalScript in StarterPlayer > StarterPlayerScripts
 
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
