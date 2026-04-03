@@ -1,0 +1,1077 @@
+--[[
+    ════════════════════════════════════════════════════
+     FEATHER PRISON  v2.0
+     FeatherHub-style sidebar window for Prison Life
+     Tabs: HOME → welcome/status, COMBAT → ESP/aimlock,
+           MOVEMENT → noclip/fly/speed, TOOLS → arrest/tp/weapons,
+           MISC → doors/respawn
+     Purple theme, smooth drag, notifications, theme toggle
+    ════════════════════════════════════════════════════
+]]
+
+-- ══════════════════════════════════════════
+--  SERVICES
+-- ══════════════════════════════════════════
+local RunService       = game:GetService("RunService")
+local Players          = game:GetService("Players")
+local UserInputService = game:GetService("UserInputService")
+local VirtualInputManager = game:GetService("VirtualInputManager")
+local TweenService     = game:GetService("TweenService")
+local Workspace        = game:GetService("Workspace")
+local CoreGui          = game:GetService("CoreGui")
+
+local Player      = Players.LocalPlayer
+local DisplayName = tostring(Player.DisplayName)
+local Username    = tostring(Player.Name)
+local Camera      = Workspace.CurrentCamera
+
+local isMobile = false
+pcall(function()
+    isMobile = UserInputService.TouchEnabled and not UserInputService.KeyboardEnabled
+end)
+
+-- ══════════════════════════════════════════
+--  GAME CONFIG
+-- ══════════════════════════════════════════
+local GCFG = {
+    AimlockSmoothness = 0.6,
+    FlySpeed = 50,
+    TeamA = {"Inmates", "Criminals"},
+    TeamB = {"Guards"},
+}
+
+-- ══════════════════════════════════════════
+--  STATE
+-- ══════════════════════════════════════════
+local State = {
+    ESP_Enabled = false,
+    Aimlock_Enabled = false,
+    Noclip_Enabled = false,
+    Fly_Enabled = false,
+    GlobalCooldown = false,
+
+    ESPLoop = nil, AimLoop = nil, NoclipLoop = nil, FlyLoop = nil,
+    Aiming = false, Target = nil,
+    SelectedArrestTarget = nil,
+    SelectedTeleportTarget = nil,
+    ESP_Cache = {},
+
+    FlyBodyGyro = nil, FlyBodyVel = nil,
+}
+
+-- ══════════════════════════════════════════
+--  PALETTE  (unified purple — FeatherHub)
+-- ══════════════════════════════════════════
+local DARK = {
+    bg      = Color3.fromRGB(14,  14,  16),
+    sidebar = Color3.fromRGB(20,  20,  24),
+    card    = Color3.fromRGB(26,  26,  30),
+    border  = Color3.fromRGB(44,  44,  52),
+    text    = Color3.fromRGB(240, 240, 244),
+    muted   = Color3.fromRGB(100, 100, 115),
+    dim     = Color3.fromRGB(32,  32,  38),
+    sep     = Color3.fromRGB(36,  36,  44),
+    header  = Color3.fromRGB(18,  18,  22),
+}
+local LIGHT = {
+    bg      = Color3.fromRGB(248, 248, 250),
+    sidebar = Color3.fromRGB(255, 255, 255),
+    card    = Color3.fromRGB(255, 255, 255),
+    border  = Color3.fromRGB(218, 218, 228),
+    text    = Color3.fromRGB(18,  18,  22),
+    muted   = Color3.fromRGB(145, 145, 160),
+    dim     = Color3.fromRGB(235, 235, 242),
+    sep     = Color3.fromRGB(225, 225, 232),
+    header  = Color3.fromRGB(252, 252, 255),
+}
+
+local accent      = Color3.fromRGB(90,  90,  210)
+local accentLight = Color3.fromRGB(120, 110, 230)
+local green       = Color3.fromRGB(100, 200, 160)
+local red         = Color3.fromRGB(220, 80,  100)
+local gold        = Color3.fromRGB(200, 170, 80)
+
+local isDark = true
+local T      = DARK
+
+local function tw(t, s, d)
+    return TweenInfo.new(t or 0.2, s or Enum.EasingStyle.Quart, d or Enum.EasingDirection.Out)
+end
+
+-- ══════════════════════════════════════════
+--  THEME REGISTRY
+-- ══════════════════════════════════════════
+local themeReg = {}
+local function reg(obj, prop, lv, dv)
+    table.insert(themeReg, {o=obj, p=prop, l=lv, d=dv})
+end
+local function applyReg()
+    for _, e in ipairs(themeReg) do
+        if e.o and e.o.Parent then e.o[e.p] = isDark and e.d or e.l end
+    end
+end
+
+-- ══════════════════════════════════════════
+--  SIZING
+-- ══════════════════════════════════════════
+local WIN_W, WIN_H, SIDE_W
+if isMobile then WIN_W=360; WIN_H=460; SIDE_W=72
+else WIN_W=460; WIN_H=400; SIDE_W=96 end
+local HDR_H = 44
+
+-- ══════════════════════════════════════════
+--  ROOT GUI
+-- ══════════════════════════════════════════
+local sg = Instance.new("ScreenGui")
+sg.Name="FeatherPrison2"; sg.ResetOnSpawn=false
+sg.ZIndexBehavior=Enum.ZIndexBehavior.Sibling
+sg.DisplayOrder=999; sg.IgnoreGuiInset=true
+if not pcall(function() sg.Parent=CoreGui end) then
+    sg.Parent=Player:WaitForChild("PlayerGui")
+end
+
+-- ESP folder
+local ESPFolder = Instance.new("Folder"); ESPFolder.Name="ESP_Visuals"; ESPFolder.Parent=sg
+
+-- ══════════════════════════════════════════
+--  NOTIFICATION
+-- ══════════════════════════════════════════
+local function notify(title, msg, nType)
+    local col = ({success=green,error=red,warning=gold})[nType] or accent
+    local n = Instance.new("Frame")
+    n.Size=UDim2.new(0,0,0,50); n.Position=UDim2.new(1,-10,1,-62)
+    n.AnchorPoint=Vector2.new(1,1); n.BackgroundColor3=T.bg
+    n.BorderSizePixel=0; n.ClipsDescendants=true; n.Parent=sg
+    Instance.new("UICorner",n).CornerRadius=UDim.new(0,8)
+    local nS=Instance.new("UIStroke",n); nS.Color=T.border; nS.Thickness=1
+    local bar=Instance.new("Frame"); bar.Size=UDim2.new(0,3,1,0)
+    bar.BackgroundColor3=col; bar.BorderSizePixel=0; bar.Parent=n
+    Instance.new("UICorner",bar).CornerRadius=UDim.new(0,8)
+    local t1=Instance.new("TextLabel"); t1.Size=UDim2.new(1,-16,0,16); t1.Position=UDim2.new(0,12,0,7)
+    t1.Text=title; t1.Font=Enum.Font.GothamBold; t1.TextSize=10
+    t1.TextColor3=T.text; t1.TextXAlignment=Enum.TextXAlignment.Left; t1.BackgroundTransparency=1; t1.Parent=n
+    local t2=Instance.new("TextLabel"); t2.Size=UDim2.new(1,-16,0,18); t2.Position=UDim2.new(0,12,0,24)
+    t2.Text=msg; t2.Font=Enum.Font.Gotham; t2.TextSize=9
+    t2.TextColor3=T.text; t2.TextTransparency=0.35; t2.TextXAlignment=Enum.TextXAlignment.Left
+    t2.TextWrapped=true; t2.BackgroundTransparency=1; t2.Parent=n
+    TweenService:Create(n,tw(0.35,Enum.EasingStyle.Back,Enum.EasingDirection.Out),{Size=UDim2.new(0,260,0,50)}):Play()
+    task.delay(2.8,function()
+        TweenService:Create(n,tw(),{Size=UDim2.new(0,0,0,50),BackgroundTransparency=1}):Play()
+        task.wait(0.3); if n and n.Parent then n:Destroy() end
+    end)
+end
+
+-- ══════════════════════════════════════════
+--  MAIN WINDOW
+-- ══════════════════════════════════════════
+local vp = workspace.CurrentCamera and workspace.CurrentCamera.ViewportSize or Vector2.new(1920,1080)
+local startX = math.floor(vp.X/2 - WIN_W/2)
+local startY = math.floor(vp.Y/2 - WIN_H/2)
+
+local win = Instance.new("Frame")
+win.Name="Win"; win.Size=UDim2.new(0,WIN_W,0,WIN_H)
+win.Position=UDim2.new(0,startX,0,startY)
+win.BackgroundColor3=T.bg; win.BorderSizePixel=0
+win.ClipsDescendants=true; win.ZIndex=1; win.Parent=sg
+Instance.new("UICorner",win).CornerRadius=UDim.new(0,14)
+local winStroke=Instance.new("UIStroke"); winStroke.Color=T.border; winStroke.Thickness=1; winStroke.Parent=win
+reg(win,"BackgroundColor3",LIGHT.bg,DARK.bg)
+reg(winStroke,"Color",LIGHT.border,DARK.border)
+
+-- glow
+local winGlow=Instance.new("ImageLabel")
+winGlow.Size=UDim2.new(1,40,1,40); winGlow.Position=UDim2.new(0,-20,0,-20)
+winGlow.BackgroundTransparency=1; winGlow.Image="rbxassetid://1316045217"
+winGlow.ImageColor3=Color3.fromRGB(90,70,160); winGlow.ImageTransparency=0.88
+winGlow.ScaleType=Enum.ScaleType.Slice; winGlow.SliceCenter=Rect.new(10,10,118,118)
+winGlow.ZIndex=-1; winGlow.Parent=win
+
+-- ══════════════════════════════════════════
+--  SIDEBAR
+-- ══════════════════════════════════════════
+local sidebar=Instance.new("Frame"); sidebar.Name="Sidebar"
+sidebar.Size=UDim2.new(0,SIDE_W,1,0); sidebar.BackgroundColor3=T.sidebar
+sidebar.BorderSizePixel=0; sidebar.ZIndex=3; sidebar.Parent=win
+Instance.new("UICorner",sidebar).CornerRadius=UDim.new(0,14)
+reg(sidebar,"BackgroundColor3",LIGHT.sidebar,DARK.sidebar)
+
+local sbCover=Instance.new("Frame"); sbCover.Size=UDim2.new(0,14,1,0); sbCover.Position=UDim2.new(1,-14,0,0)
+sbCover.BackgroundColor3=T.sidebar; sbCover.BorderSizePixel=0; sbCover.ZIndex=3; sbCover.Parent=sidebar
+reg(sbCover,"BackgroundColor3",LIGHT.sidebar,DARK.sidebar)
+
+-- logo pill
+local logoPill=Instance.new("Frame"); logoPill.Size=UDim2.new(0,34,0,34)
+logoPill.Position=UDim2.new(0.5,-17,0,10); logoPill.BackgroundColor3=accent
+logoPill.BorderSizePixel=0; logoPill.ZIndex=5; logoPill.Parent=sidebar
+Instance.new("UICorner",logoPill).CornerRadius=UDim.new(0,9)
+local logoF=Instance.new("TextLabel"); logoF.Size=UDim2.new(1,0,1,0); logoF.Text="F"
+logoF.TextSize=18; logoF.Font=Enum.Font.GothamBold; logoF.TextColor3=Color3.new(1,1,1)
+logoF.BackgroundTransparency=1; logoF.ZIndex=6; logoF.Parent=logoPill
+
+local sbTopSep=Instance.new("Frame"); sbTopSep.Size=UDim2.new(0.72,0,0,1); sbTopSep.Position=UDim2.new(0.14,0,0,52)
+sbTopSep.BackgroundColor3=T.sep; sbTopSep.BorderSizePixel=0; sbTopSep.ZIndex=4; sbTopSep.Parent=sidebar
+reg(sbTopSep,"BackgroundColor3",LIGHT.sep,DARK.sep)
+
+-- nav container
+local navCont=Instance.new("Frame"); navCont.Size=UDim2.new(1,0,1,-138); navCont.Position=UDim2.new(0,0,0,58)
+navCont.BackgroundTransparency=1; navCont.ZIndex=4; navCont.Parent=sidebar
+local navList=Instance.new("UIListLayout"); navList.SortOrder=Enum.SortOrder.LayoutOrder
+navList.VerticalAlignment=Enum.VerticalAlignment.Top
+navList.HorizontalAlignment=Enum.HorizontalAlignment.Center
+navList.Padding=UDim.new(0,3); navList.Parent=navCont
+
+local sbBotSep=Instance.new("Frame"); sbBotSep.Size=UDim2.new(0.72,0,0,1); sbBotSep.Position=UDim2.new(0.14,0,1,-78)
+sbBotSep.BackgroundColor3=T.sep; sbBotSep.BorderSizePixel=0; sbBotSep.ZIndex=4; sbBotSep.Parent=sidebar
+reg(sbBotSep,"BackgroundColor3",LIGHT.sep,DARK.sep)
+
+local wmName=Instance.new("TextLabel"); wmName.Size=UDim2.new(1,0,0,14); wmName.Position=UDim2.new(0,0,1,-72)
+wmName.Text="feather prison"; wmName.Font=Enum.Font.GothamBold; wmName.TextSize=9
+wmName.TextColor3=accent; wmName.BackgroundTransparency=1
+wmName.TextXAlignment=Enum.TextXAlignment.Center; wmName.ZIndex=5; wmName.Parent=sidebar
+
+local wmVer=Instance.new("TextLabel"); wmVer.Size=UDim2.new(1,0,0,12); wmVer.Position=UDim2.new(0,0,1,-56)
+wmVer.Text="v2.0  •  prison life"; wmVer.Font=Enum.Font.Gotham; wmVer.TextSize=7
+wmVer.TextColor3=T.muted; wmVer.BackgroundTransparency=1
+wmVer.TextXAlignment=Enum.TextXAlignment.Center; wmVer.ZIndex=5; wmVer.Parent=sidebar
+reg(wmVer,"TextColor3",LIGHT.muted,DARK.muted)
+
+-- theme toggle
+local thBtn=Instance.new("TextButton"); thBtn.Size=UDim2.new(1,-12,0,26); thBtn.Position=UDim2.new(0,6,1,-34)
+thBtn.BackgroundColor3=T.dim; thBtn.BorderSizePixel=0; thBtn.Text="☀  Light"
+thBtn.Font=Enum.Font.GothamBold; thBtn.TextSize=8; thBtn.TextColor3=T.muted
+thBtn.AutoButtonColor=false; thBtn.ZIndex=5; thBtn.Parent=sidebar
+Instance.new("UICorner",thBtn).CornerRadius=UDim.new(0,7)
+local thS=Instance.new("UIStroke"); thS.Color=T.border; thS.Thickness=1; thS.Parent=thBtn
+reg(thBtn,"BackgroundColor3",LIGHT.dim,DARK.dim)
+reg(thBtn,"TextColor3",LIGHT.muted,DARK.muted)
+reg(thS,"Color",LIGHT.border,DARK.border)
+
+-- ══════════════════════════════════════════
+--  HEADER
+-- ══════════════════════════════════════════
+local hdr=Instance.new("Frame"); hdr.Size=UDim2.new(1,-SIDE_W,0,HDR_H); hdr.Position=UDim2.new(0,SIDE_W,0,0)
+hdr.BackgroundColor3=T.header; hdr.BorderSizePixel=0; hdr.ZIndex=3; hdr.Parent=win
+Instance.new("UICorner",hdr).CornerRadius=UDim.new(0,14)
+reg(hdr,"BackgroundColor3",LIGHT.header,DARK.header)
+
+local hdrLC=Instance.new("Frame"); hdrLC.Size=UDim2.new(0,14,1,0); hdrLC.BackgroundColor3=T.header
+hdrLC.BorderSizePixel=0; hdrLC.ZIndex=3; hdrLC.Parent=hdr
+reg(hdrLC,"BackgroundColor3",LIGHT.header,DARK.header)
+local hdrBC=Instance.new("Frame"); hdrBC.Size=UDim2.new(0,14,0,14); hdrBC.Position=UDim2.new(1,-14,1,-14)
+hdrBC.BackgroundColor3=T.header; hdrBC.BorderSizePixel=0; hdrBC.ZIndex=3; hdrBC.Parent=hdr
+reg(hdrBC,"BackgroundColor3",LIGHT.header,DARK.header)
+
+local hdrLine=Instance.new("Frame"); hdrLine.Size=UDim2.new(1,-8,0,1); hdrLine.Position=UDim2.new(0,4,1,-1)
+hdrLine.BackgroundColor3=T.sep; hdrLine.BorderSizePixel=0; hdrLine.ZIndex=4; hdrLine.Parent=hdr
+reg(hdrLine,"BackgroundColor3",LIGHT.sep,DARK.sep)
+
+local hdrTitle=Instance.new("TextLabel"); hdrTitle.Size=UDim2.new(1,-100,1,0); hdrTitle.Position=UDim2.new(0,14,0,0)
+hdrTitle.Text="Feather Prison"; hdrTitle.Font=Enum.Font.GothamBold; hdrTitle.TextSize=isMobile and 13 or 12
+hdrTitle.TextColor3=T.text; hdrTitle.BackgroundTransparency=1
+hdrTitle.TextXAlignment=Enum.TextXAlignment.Left; hdrTitle.ZIndex=5; hdrTitle.Parent=hdr
+reg(hdrTitle,"TextColor3",LIGHT.text,DARK.text)
+
+-- minimize
+local minBtn=Instance.new("TextButton"); minBtn.Size=UDim2.new(0,26,0,26)
+minBtn.Position=UDim2.new(1,-62,0.5,-13); minBtn.Text="—"
+minBtn.Font=Enum.Font.GothamBold; minBtn.TextSize=14; minBtn.TextColor3=T.muted
+minBtn.BackgroundColor3=T.dim; minBtn.BorderSizePixel=0; minBtn.AutoButtonColor=false
+minBtn.ZIndex=5; minBtn.Parent=hdr
+Instance.new("UICorner",minBtn).CornerRadius=UDim.new(0,6)
+reg(minBtn,"BackgroundColor3",LIGHT.dim,DARK.dim); reg(minBtn,"TextColor3",LIGHT.muted,DARK.muted)
+minBtn.MouseEnter:Connect(function() TweenService:Create(minBtn,tw(),{BackgroundColor3=accent,TextColor3=Color3.new(1,1,1)}):Play() end)
+minBtn.MouseLeave:Connect(function() TweenService:Create(minBtn,tw(),{BackgroundColor3=T.dim,TextColor3=T.muted}):Play() end)
+
+-- close
+local closeBtn=Instance.new("TextButton"); closeBtn.Size=UDim2.new(0,26,0,26)
+closeBtn.Position=UDim2.new(1,-32,0.5,-13); closeBtn.Text="×"
+closeBtn.Font=Enum.Font.GothamBold; closeBtn.TextSize=18; closeBtn.TextColor3=T.muted
+closeBtn.BackgroundColor3=T.dim; closeBtn.BorderSizePixel=0; closeBtn.AutoButtonColor=false
+closeBtn.ZIndex=5; closeBtn.Parent=hdr
+Instance.new("UICorner",closeBtn).CornerRadius=UDim.new(0,6)
+reg(closeBtn,"BackgroundColor3",LIGHT.dim,DARK.dim); reg(closeBtn,"TextColor3",LIGHT.muted,DARK.muted)
+closeBtn.MouseEnter:Connect(function() TweenService:Create(closeBtn,tw(),{BackgroundColor3=red,TextColor3=Color3.new(1,1,1)}):Play() end)
+closeBtn.MouseLeave:Connect(function() TweenService:Create(closeBtn,tw(),{BackgroundColor3=T.dim,TextColor3=T.muted}):Play() end)
+closeBtn.MouseButton1Click:Connect(function()
+    if State.ESPLoop then State.ESPLoop:Disconnect() end
+    if State.AimLoop then State.AimLoop:Disconnect() end
+    if State.NoclipLoop then State.NoclipLoop:Disconnect() end
+    if State.FlyLoop then State.FlyLoop:Disconnect() end
+    sg:Destroy()
+end)
+
+-- ══════════════════════════════════════════
+--  MINIMIZE / RESTORE
+-- ══════════════════════════════════════════
+local isMinimized = false
+local content -- forward declare
+
+local function toggleMinimize()
+    isMinimized = not isMinimized
+    if isMinimized then
+        TweenService:Create(win, tw(0.3), {Size = UDim2.new(0,WIN_W,0,HDR_H)}):Play()
+        sidebar.Visible=false; content.Visible=false
+        TweenService:Create(hdr, tw(0.3), {Size=UDim2.new(1,0,0,HDR_H), Position=UDim2.new(0,0,0,0)}):Play()
+        hdrLC.Visible=false; hdrBC.Visible=false; hdrLine.Visible=false
+        minBtn.Text="+"
+    else
+        TweenService:Create(win, tw(0.3), {Size=UDim2.new(0,WIN_W,0,WIN_H)}):Play()
+        TweenService:Create(hdr, tw(0.3), {Size=UDim2.new(1,-SIDE_W,0,HDR_H), Position=UDim2.new(0,SIDE_W,0,0)}):Play()
+        hdrLC.Visible=true; hdrBC.Visible=true; hdrLine.Visible=true
+        task.delay(0.1, function() sidebar.Visible=true; content.Visible=true end)
+        minBtn.Text="—"
+    end
+end
+minBtn.MouseButton1Click:Connect(toggleMinimize)
+
+-- ══════════════════════════════════════════
+--  SMOOTH DRAG  (lerp delay)
+-- ══════════════════════════════════════════
+do
+    local dragging, dragInput, dragStart, startPos
+    local targetPos = UDim2.new(0, startX, 0, startY)
+    local SMOOTH = 0.12
+
+    hdr.InputBegan:Connect(function(i)
+        local t=i.UserInputType
+        if t==Enum.UserInputType.MouseButton1 or t==Enum.UserInputType.Touch then
+            dragging=true; dragStart=i.Position; startPos=win.Position; targetPos=win.Position
+        end
+    end)
+    hdr.InputChanged:Connect(function(i)
+        local t=i.UserInputType
+        if t==Enum.UserInputType.MouseMovement or t==Enum.UserInputType.Touch then dragInput=i end
+    end)
+    UserInputService.InputChanged:Connect(function(i)
+        if i==dragInput and dragging then
+            local d=i.Position-dragStart
+            local vpSz=workspace.CurrentCamera.ViewportSize
+            targetPos=UDim2.new(0,
+                math.clamp(startPos.X.Offset+d.X, 0, vpSz.X-win.AbsoluteSize.X), 0,
+                math.clamp(startPos.Y.Offset+d.Y, 0, vpSz.Y-win.AbsoluteSize.Y))
+        end
+    end)
+    UserInputService.InputEnded:Connect(function(i)
+        local t=i.UserInputType
+        if t==Enum.UserInputType.MouseButton1 or t==Enum.UserInputType.Touch then dragging=false end
+    end)
+
+    RunService.RenderStepped:Connect(function()
+        if win and win.Parent then
+            local cx, cy = win.Position.X.Offset, win.Position.Y.Offset
+            local tx, ty = targetPos.X.Offset, targetPos.Y.Offset
+            win.Position = UDim2.new(0, cx+(tx-cx)*SMOOTH, 0, cy+(ty-cy)*SMOOTH)
+        end
+    end)
+end
+
+-- ══════════════════════════════════════════
+--  CONTENT AREA
+-- ══════════════════════════════════════════
+content=Instance.new("Frame")
+content.Size=UDim2.new(1,-SIDE_W,1,-HDR_H); content.Position=UDim2.new(0,SIDE_W,0,HDR_H)
+content.BackgroundTransparency=1; content.BorderSizePixel=0; content.ZIndex=2; content.Parent=win
+
+-- ══════════════════════════════════════════
+--  TABS
+-- ══════════════════════════════════════════
+local TABS = {
+    { id="home",     name="HOME"     },
+    { id="combat",   name="COMBAT"   },
+    { id="movement", name="MOVE"     },
+    { id="tools",    name="TOOLS"    },
+    { id="misc",     name="MISC"     },
+}
+
+local pages   = {}
+local navBtns = {}
+local activeTab = 1
+
+local function makePage()
+    local pg=Instance.new("ScrollingFrame"); pg.Size=UDim2.new(1,0,1,0)
+    pg.BackgroundTransparency=1; pg.BorderSizePixel=0; pg.ScrollBarThickness=3
+    pg.ScrollBarImageColor3=accent; pg.CanvasSize=UDim2.new(0,0,0,0)
+    pg.AutomaticCanvasSize=Enum.AutomaticSize.Y; pg.ScrollingDirection=Enum.ScrollingDirection.Y
+    pg.ElasticBehavior=Enum.ElasticBehavior.Never; pg.Visible=false; pg.ZIndex=2; pg.Parent=content
+    local l=Instance.new("UIListLayout"); l.SortOrder=Enum.SortOrder.LayoutOrder
+    l.HorizontalAlignment=Enum.HorizontalAlignment.Center; l.Padding=UDim.new(0,6); l.Parent=pg
+    local p=Instance.new("UIPadding"); p.PaddingTop=UDim.new(0,10); p.PaddingBottom=UDim.new(0,10)
+    p.PaddingLeft=UDim.new(0,10); p.PaddingRight=UDim.new(0,10); p.Parent=pg
+    return pg
+end
+
+for i in ipairs(TABS) do pages[i] = makePage() end
+
+local function setTab(idx)
+    if isMinimized then toggleMinimize() end
+    activeTab=idx
+    hdrTitle.Text = TABS[idx].name == "HOME" and "Feather Prison" or TABS[idx].name
+    for i,btn in ipairs(navBtns) do
+        local on=(i==idx)
+        TweenService:Create(btn.bg,tw(0.15),{
+            BackgroundColor3=on and accent or T.dim, BackgroundTransparency=on and 0.15 or 0}):Play()
+        TweenService:Create(btn.lbl,tw(0.15),{TextColor3=on and accent or T.muted}):Play()
+        btn.bar.BackgroundTransparency=on and 0 or 1
+        pages[i].Visible=on
+    end
+end
+
+-- build nav
+for i, def in ipairs(TABS) do
+    local row=Instance.new("Frame"); row.Size=UDim2.new(1,-6,0,isMobile and 34 or 30)
+    row.BackgroundTransparency=1; row.LayoutOrder=i; row.ZIndex=4; row.Parent=navCont
+
+    local bar=Instance.new("Frame"); bar.Size=UDim2.new(0,3,0.5,0); bar.Position=UDim2.new(0,0,0.25,0)
+    bar.BackgroundColor3=accent; bar.BackgroundTransparency=1
+    bar.BorderSizePixel=0; bar.ZIndex=5; bar.Parent=row
+    Instance.new("UICorner",bar).CornerRadius=UDim.new(1,0)
+
+    local bg=Instance.new("Frame"); bg.Size=UDim2.new(1,-4,1,-4); bg.Position=UDim2.new(0,4,0,2)
+    bg.BackgroundColor3=T.dim; bg.BackgroundTransparency=0
+    bg.BorderSizePixel=0; bg.ZIndex=4; bg.Parent=row
+    Instance.new("UICorner",bg).CornerRadius=UDim.new(0,7)
+
+    local lbl=Instance.new("TextLabel"); lbl.Size=UDim2.new(1,-12,1,0); lbl.Position=UDim2.new(0,10,0,0)
+    lbl.Text=def.name; lbl.Font=Enum.Font.GothamBold; lbl.TextSize=isMobile and 8 or 7
+    lbl.TextColor3=T.muted; lbl.BackgroundTransparency=1
+    lbl.TextXAlignment=Enum.TextXAlignment.Left; lbl.ZIndex=5; lbl.Parent=row
+
+    local hit=Instance.new("TextButton"); hit.Size=UDim2.new(1,0,1,0)
+    hit.BackgroundTransparency=1; hit.Text=""; hit.ZIndex=6; hit.Parent=row
+    local ci=i; hit.MouseButton1Click:Connect(function() setTab(ci) end)
+    hit.TouchTap:Connect(function() setTab(ci) end)
+
+    navBtns[i]={bg=bg,lbl=lbl,bar=bar}
+    reg(bg,"BackgroundColor3",LIGHT.dim,DARK.dim)
+    reg(lbl,"TextColor3",LIGHT.muted,DARK.muted)
+end
+
+-- ══════════════════════════════════════════
+--  SHARED BUILDERS
+-- ══════════════════════════════════════════
+local function makeCard(parent, order)
+    local c=Instance.new("Frame"); c.Size=UDim2.new(1,0,0,0); c.AutomaticSize=Enum.AutomaticSize.Y
+    c.BackgroundColor3=T.card; c.BorderSizePixel=0; c.LayoutOrder=order; c.ZIndex=3; c.Parent=parent
+    Instance.new("UICorner",c).CornerRadius=UDim.new(0,10)
+    local s=Instance.new("UIStroke"); s.Color=T.border; s.Thickness=1; s.Parent=c
+    local l=Instance.new("UIListLayout"); l.SortOrder=Enum.SortOrder.LayoutOrder
+    l.HorizontalAlignment=Enum.HorizontalAlignment.Center; l.Padding=UDim.new(0,0); l.Parent=c
+    reg(c,"BackgroundColor3",LIGHT.card,DARK.card); reg(s,"Color",LIGHT.border,DARK.border)
+    return c
+end
+
+local function makeSection(parent, label, order)
+    local f=Instance.new("Frame"); f.Size=UDim2.new(1,0,0,20); f.BackgroundTransparency=1
+    f.LayoutOrder=order; f.ZIndex=3; f.Parent=parent
+    local lbl=Instance.new("TextLabel"); lbl.Size=UDim2.new(1,0,1,0); lbl.Text=string.upper(label)
+    lbl.Font=Enum.Font.GothamBold; lbl.TextSize=8; lbl.TextColor3=accent
+    lbl.TextXAlignment=Enum.TextXAlignment.Left; lbl.BackgroundTransparency=1; lbl.ZIndex=3; lbl.Parent=f
+    local line=Instance.new("Frame"); line.Size=UDim2.new(0,26,0,2); line.Position=UDim2.new(0,0,1,-2)
+    line.BackgroundColor3=accent; line.BorderSizePixel=0; line.ZIndex=3; line.Parent=f
+    Instance.new("UICorner",line).CornerRadius=UDim.new(1,0)
+end
+
+local function makeRow(card, order, isLast, h)
+    local row=Instance.new("Frame"); row.Size=UDim2.new(1,0,0,h or 42)
+    row.BackgroundTransparency=1; row.BorderSizePixel=0; row.LayoutOrder=order; row.ZIndex=4; row.Parent=card
+    if not isLast then
+        local sep=Instance.new("Frame"); sep.Size=UDim2.new(1,-24,0,1); sep.Position=UDim2.new(0,12,1,-1)
+        sep.BackgroundColor3=T.sep; sep.BorderSizePixel=0; sep.ZIndex=4; sep.Parent=row
+        reg(sep,"BackgroundColor3",LIGHT.sep,DARK.sep)
+    end
+    return row
+end
+
+local function makeInfoRow(card, order, labelTxt, valueTxt, valueColor, isLast)
+    local row=makeRow(card,order,isLast,36)
+    local l=Instance.new("TextLabel"); l.Size=UDim2.new(0.55,0,1,0); l.Position=UDim2.new(0,14,0,0)
+    l.Text=labelTxt; l.Font=Enum.Font.GothamSemibold; l.TextSize=isMobile and 11 or 10
+    l.TextColor3=T.muted; l.TextXAlignment=Enum.TextXAlignment.Left; l.BackgroundTransparency=1; l.ZIndex=5; l.Parent=row
+    reg(l,"TextColor3",LIGHT.muted,DARK.muted)
+    local r=Instance.new("TextLabel"); r.Name="Val"; r.Size=UDim2.new(0.45,0,1,0); r.Position=UDim2.new(0.55,0,0,0)
+    r.Text=valueTxt; r.Font=Enum.Font.GothamBold; r.TextSize=isMobile and 11 or 10
+    r.TextColor3=valueColor or T.text; r.TextXAlignment=Enum.TextXAlignment.Right; r.BackgroundTransparency=1; r.ZIndex=5; r.Parent=row
+    Instance.new("UIPadding",r).PaddingRight=UDim.new(0,14)
+    return row, r
+end
+
+local function makeToggle(card, order, label, initVal, cb, isLast)
+    local row=makeRow(card,order,isLast,42)
+    local state=initVal
+    local lbl=Instance.new("TextLabel"); lbl.Size=UDim2.new(1,-80,1,0); lbl.Position=UDim2.new(0,14,0,0)
+    lbl.Text=label; lbl.Font=Enum.Font.GothamSemibold; lbl.TextSize=isMobile and 12 or 10
+    lbl.TextColor3=T.text; lbl.TextXAlignment=Enum.TextXAlignment.Left
+    lbl.BackgroundTransparency=1; lbl.ZIndex=5; lbl.Parent=row
+    reg(lbl,"TextColor3",LIGHT.text,DARK.text)
+    local pill=Instance.new("Frame"); pill.Size=UDim2.new(0,44,0,22); pill.Position=UDim2.new(1,-54,0.5,-11)
+    pill.BackgroundColor3=state and accent or T.dim; pill.BorderSizePixel=0; pill.ZIndex=5; pill.Parent=row
+    Instance.new("UICorner",pill).CornerRadius=UDim.new(1,0)
+    local knob=Instance.new("Frame"); knob.Size=UDim2.new(0,16,0,16)
+    knob.Position=state and UDim2.new(1,-19,0.5,-8) or UDim2.new(0,3,0.5,-8)
+    knob.BackgroundColor3=state and Color3.new(1,1,1) or T.muted
+    knob.BorderSizePixel=0; knob.ZIndex=6; knob.Parent=pill
+    Instance.new("UICorner",knob).CornerRadius=UDim.new(1,0)
+    local hit=Instance.new("TextButton"); hit.Size=UDim2.new(0,60,1,0); hit.Position=UDim2.new(1,-62,0,0)
+    hit.BackgroundTransparency=1; hit.Text=""; hit.ZIndex=7; hit.Parent=row
+    local function toggle()
+        state=not state
+        TweenService:Create(pill,tw(0.15),{BackgroundColor3=state and accent or T.dim}):Play()
+        TweenService:Create(knob,tw(0.15),{
+            Position=state and UDim2.new(1,-19,0.5,-8) or UDim2.new(0,3,0.5,-8),
+            BackgroundColor3=state and Color3.new(1,1,1) or T.muted}):Play()
+        pcall(cb,state)
+        notify(label, state and "Enabled" or "Disabled", state and "success" or "error")
+    end
+    hit.MouseButton1Click:Connect(toggle); hit.TouchTap:Connect(toggle)
+    return row
+end
+
+local function makeActionButton(card, order, label, cb, isLast)
+    local row=makeRow(card,order,isLast,42)
+    local lbl=Instance.new("TextLabel"); lbl.Name="Lbl"; lbl.Size=UDim2.new(1,-80,1,0); lbl.Position=UDim2.new(0,14,0,0)
+    lbl.Text=label; lbl.Font=Enum.Font.GothamSemibold; lbl.TextSize=isMobile and 12 or 10
+    lbl.TextColor3=T.text; lbl.TextXAlignment=Enum.TextXAlignment.Left
+    lbl.BackgroundTransparency=1; lbl.ZIndex=5; lbl.Parent=row
+    reg(lbl,"TextColor3",LIGHT.text,DARK.text)
+
+    local badge=Instance.new("TextButton"); badge.Size=UDim2.new(0,50,0,22); badge.Position=UDim2.new(1,-58,0.5,-11)
+    badge.Text="RUN"; badge.Font=Enum.Font.GothamBold; badge.TextSize=8
+    badge.TextColor3=Color3.new(1,1,1); badge.BackgroundColor3=accent
+    badge.BorderSizePixel=0; badge.AutoButtonColor=false; badge.ZIndex=5; badge.Parent=row
+    Instance.new("UICorner",badge).CornerRadius=UDim.new(0,5)
+    badge.MouseEnter:Connect(function() TweenService:Create(badge,tw(),{BackgroundColor3=accentLight}):Play() end)
+    badge.MouseLeave:Connect(function() TweenService:Create(badge,tw(),{BackgroundColor3=accent}):Play() end)
+    badge.MouseButton1Click:Connect(cb)
+    badge.TouchTap:Connect(cb)
+    return row, lbl
+end
+
+local function makeDropdownButton(card, order, prefix, filterFn, onSelect, isLast)
+    local row=makeRow(card,order,isLast,42)
+    local selectedLabel=Instance.new("TextLabel"); selectedLabel.Name="Sel"; selectedLabel.Size=UDim2.new(1,-80,1,0); selectedLabel.Position=UDim2.new(0,14,0,0)
+    selectedLabel.Text=prefix..": None"; selectedLabel.Font=Enum.Font.GothamSemibold; selectedLabel.TextSize=isMobile and 11 or 10
+    selectedLabel.TextColor3=T.text; selectedLabel.TextXAlignment=Enum.TextXAlignment.Left
+    selectedLabel.BackgroundTransparency=1; selectedLabel.ZIndex=5; selectedLabel.Parent=row
+    reg(selectedLabel,"TextColor3",LIGHT.text,DARK.text)
+
+    local openBtn=Instance.new("TextButton"); openBtn.Size=UDim2.new(0,50,0,22); openBtn.Position=UDim2.new(1,-58,0.5,-11)
+    openBtn.Text="▼"; openBtn.Font=Enum.Font.GothamBold; openBtn.TextSize=10
+    openBtn.TextColor3=T.muted; openBtn.BackgroundColor3=T.dim
+    openBtn.BorderSizePixel=0; openBtn.AutoButtonColor=false; openBtn.ZIndex=5; openBtn.Parent=row
+    Instance.new("UICorner",openBtn).CornerRadius=UDim.new(0,5)
+    reg(openBtn,"BackgroundColor3",LIGHT.dim,DARK.dim); reg(openBtn,"TextColor3",LIGHT.muted,DARK.muted)
+
+    -- dropdown container (lives inside the card)
+    local ddFrame=Instance.new("Frame"); ddFrame.Size=UDim2.new(1,0,0,0); ddFrame.AutomaticSize=Enum.AutomaticSize.Y
+    ddFrame.BackgroundTransparency=1; ddFrame.ClipsDescendants=true; ddFrame.LayoutOrder=order+1; ddFrame.ZIndex=5; ddFrame.Parent=card
+    local ddLayout=Instance.new("UIListLayout"); ddLayout.Padding=UDim.new(0,2)
+    ddLayout.HorizontalAlignment=Enum.HorizontalAlignment.Center; ddLayout.SortOrder=Enum.SortOrder.LayoutOrder; ddLayout.Parent=ddFrame
+
+    local isOpen=false
+
+    local function closeDD()
+        for _, c in pairs(ddFrame:GetChildren()) do if c:IsA("TextButton") then c:Destroy() end end
+        isOpen=false; openBtn.Text="▼"
+    end
+
+    local function openDD()
+        closeDD(); isOpen=true; openBtn.Text="▲"
+        for _, p in ipairs(Players:GetPlayers()) do
+            if p ~= Player and filterFn(p) then
+                local pbtn=Instance.new("TextButton"); pbtn.Size=UDim2.new(1,-24,0,28)
+                pbtn.Text=p.Name; pbtn.Font=Enum.Font.Gotham; pbtn.TextSize=10
+                pbtn.TextColor3=T.text; pbtn.BackgroundColor3=T.dim
+                pbtn.BorderSizePixel=0; pbtn.AutoButtonColor=false; pbtn.ZIndex=6; pbtn.Parent=ddFrame
+                Instance.new("UICorner",pbtn).CornerRadius=UDim.new(0,5)
+                reg(pbtn,"BackgroundColor3",LIGHT.dim,DARK.dim); reg(pbtn,"TextColor3",LIGHT.text,DARK.text)
+                pbtn.MouseEnter:Connect(function() TweenService:Create(pbtn,tw(0.1),{BackgroundColor3=accent}):Play() end)
+                pbtn.MouseLeave:Connect(function() TweenService:Create(pbtn,tw(0.1),{BackgroundColor3=T.dim}):Play() end)
+                pbtn.MouseButton1Click:Connect(function()
+                    onSelect(p)
+                    selectedLabel.Text=prefix..": "..p.Name
+                    closeDD()
+                end)
+                pbtn.TouchTap:Connect(function()
+                    onSelect(p)
+                    selectedLabel.Text=prefix..": "..p.Name
+                    closeDD()
+                end)
+            end
+        end
+    end
+
+    openBtn.MouseEnter:Connect(function() TweenService:Create(openBtn,tw(),{BackgroundColor3=accent,TextColor3=Color3.new(1,1,1)}):Play() end)
+    openBtn.MouseLeave:Connect(function() TweenService:Create(openBtn,tw(),{BackgroundColor3=T.dim,TextColor3=T.muted}):Play() end)
+    openBtn.MouseButton1Click:Connect(function() if isOpen then closeDD() else openDD() end end)
+    openBtn.TouchTap:Connect(function() if isOpen then closeDD() else openDD() end end)
+
+    return row, selectedLabel
+end
+
+local function makeTextInput(card, order, placeholder, cb, isLast)
+    local row=makeRow(card,order,isLast,42)
+    local box=Instance.new("TextBox"); box.Size=UDim2.new(1,-28,0,28); box.Position=UDim2.new(0,14,0.5,-14)
+    box.PlaceholderText=placeholder; box.Text=""
+    box.Font=Enum.Font.GothamMedium; box.TextSize=isMobile and 12 or 10
+    box.TextColor3=T.text; box.PlaceholderColor3=T.muted
+    box.BackgroundColor3=T.dim; box.BorderSizePixel=0
+    box.ClearTextOnFocus=false; box.ZIndex=5; box.Parent=row
+    Instance.new("UICorner",box).CornerRadius=UDim.new(0,6)
+    local bp=Instance.new("UIPadding"); bp.PaddingLeft=UDim.new(0,10); bp.PaddingRight=UDim.new(0,10); bp.Parent=box
+    local bs=Instance.new("UIStroke",box); bs.Color=T.border; bs.Thickness=1
+    reg(box,"BackgroundColor3",LIGHT.dim,DARK.dim); reg(box,"TextColor3",LIGHT.text,DARK.text)
+    reg(box,"PlaceholderColor3",LIGHT.muted,DARK.muted); reg(bs,"Color",LIGHT.border,DARK.border)
+    box.Focused:Connect(function() TweenService:Create(bs,tw(),{Color=accent,Thickness=1.5}):Play() end)
+    box.FocusLost:Connect(function(enter)
+        TweenService:Create(bs,tw(),{Color=T.border,Thickness=1}):Play()
+        if enter then cb(box.Text) end
+    end)
+    return row, box
+end
+
+-- ══════════════════════════════════════════════════
+--  CORE GAME SYSTEMS (ESP, Aimlock, Fly, etc.)
+-- ══════════════════════════════════════════════════
+
+-- [ESP]
+local function CreateESPObjects(player)
+    local box = Instance.new("BoxHandleAdornment")
+    box.Name=player.Name.."_Box"; box.Size=Vector3.new(4,5,1); box.Adornee=nil
+    box.AlwaysOnTop=true; box.ZIndex=5; box.Transparency=0.5; box.Color3=Color3.new(1,1,1); box.Parent=ESPFolder
+    local bb=Instance.new("BillboardGui")
+    bb.Name=player.Name.."_Info"; bb.Adornee=nil; bb.Size=UDim2.new(0,100,0,50)
+    bb.StudsOffset=Vector3.new(0,3,0); bb.AlwaysOnTop=true; bb.Parent=ESPFolder
+    local hl=Instance.new("TextLabel"); hl.Name="Health"; hl.BackgroundTransparency=1
+    hl.Size=UDim2.new(1,0,0.5,0); hl.Text="100%"; hl.TextColor3=Color3.fromRGB(0,255,0)
+    hl.TextStrokeTransparency=0; hl.Font=Enum.Font.GothamBold; hl.TextSize=12; hl.Parent=bb
+    local nl=Instance.new("TextLabel"); nl.Name="Name"; nl.BackgroundTransparency=1
+    nl.Size=UDim2.new(1,0,0.5,0); nl.Position=UDim2.new(0,0,0.5,0); nl.Text=player.Name
+    nl.TextColor3=Color3.new(1,1,1); nl.TextStrokeTransparency=0; nl.Font=Enum.Font.GothamBold; nl.TextSize=12; nl.Parent=bb
+    return {Box=box, Billboard=bb, HLabel=hl, NLabel=nl}
+end
+
+local function UpdateESP()
+    if not State.ESP_Enabled then return end
+    for plr, objs in pairs(State.ESP_Cache) do
+        if not plr or not plr.Parent then objs.Box:Destroy(); objs.Billboard:Destroy(); State.ESP_Cache[plr]=nil end
+    end
+    for _, p in ipairs(Players:GetPlayers()) do
+        if p ~= Player and p.Character then
+            local c=p.Character; local r=c:FindFirstChild("HumanoidRootPart")
+            local h=c:FindFirstChild("Head"); local hum=c:FindFirstChild("Humanoid")
+            if r and h and hum and hum.Health>0 then
+                if not State.ESP_Cache[p] then State.ESP_Cache[p]=CreateESPObjects(p) end
+                local o=State.ESP_Cache[p]; local tc=p.TeamColor.Color
+                o.Box.Adornee=r; o.Box.Size=Vector3.new(4,5.5,2); o.Box.Color3=tc; o.Box.Visible=true
+                o.Billboard.Adornee=h; o.Billboard.Enabled=true
+                o.NLabel.Text=p.Name; o.NLabel.TextColor3=tc
+                local hp=math.floor((hum.Health/hum.MaxHealth)*100)
+                o.HLabel.Text=hp.."%"
+                o.HLabel.TextColor3=Color3.fromRGB(255,0,0):Lerp(Color3.fromRGB(0,255,0), hum.Health/hum.MaxHealth)
+            elseif State.ESP_Cache[p] then
+                State.ESP_Cache[p].Box.Visible=false; State.ESP_Cache[p].Billboard.Enabled=false
+            end
+        end
+    end
+end
+
+-- [Aimlock]
+local function IsEnemy(p)
+    if not p.Team then return true end
+    local my = Player.Team and Player.Team.Name; local their = p.Team.Name
+    if my==their then return false end
+    local function isA(t) return table.find(GCFG.TeamA, t) end
+    local function isB(t) return table.find(GCFG.TeamB, t) end
+    if isA(my) and isA(their) then return false end
+    if isB(my) and isB(their) then return false end
+    return true
+end
+
+local function IsVisible(tc)
+    local mh = Player.Character and Player.Character:FindFirstChild("Head")
+    local th = tc:FindFirstChild("Head")
+    if not mh or not th then return false end
+    local params = RaycastParams.new()
+    params.FilterDescendantsInstances = {Player.Character, tc}
+    params.FilterType = Enum.RaycastFilterType.Blacklist
+    local result = Workspace:Raycast(Camera.CFrame.Position, th.Position - Camera.CFrame.Position, params)
+    return not (result and result.Instance)
+end
+
+local function GetClosestEnemy()
+    local closest, dist = nil, math.huge
+    local center = Vector2.new(Camera.ViewportSize.X/2, Camera.ViewportSize.Y/2)
+    for _, p in ipairs(Players:GetPlayers()) do
+        if p ~= Player and IsEnemy(p) and p.Character then
+            local h=p.Character:FindFirstChild("Head"); local hum=p.Character:FindFirstChild("Humanoid")
+            if h and hum and hum.Health>0 then
+                local sp, onS = Camera:WorldToViewportPoint(h.Position)
+                if onS and IsVisible(p.Character) then
+                    local m = (Vector2.new(sp.X,sp.Y)-center).Magnitude
+                    if m<dist then dist=m; closest=p.Character end
+                end
+            end
+        end
+    end
+    return closest
+end
+
+local function UpdateAim()
+    if not State.Target or not State.Target:FindFirstChild("Humanoid") or State.Target.Humanoid.Health<=0 or not IsVisible(State.Target) then
+        State.Aiming=false; State.Target=nil; return
+    end
+    local h=State.Target:FindFirstChild("Head")
+    if h then Camera.CFrame = Camera.CFrame:Lerp(CFrame.lookAt(Camera.CFrame.Position, h.Position), GCFG.AimlockSmoothness) end
+end
+
+UserInputService.InputBegan:Connect(function(input, gp)
+    if gp then return end
+    if input.UserInputType == Enum.UserInputType.MouseButton1 and State.Aimlock_Enabled then
+        State.Target = GetClosestEnemy()
+        if State.Target then
+            State.Aiming = true
+            if not State.AimLoop then State.AimLoop = RunService.RenderStepped:Connect(UpdateAim) end
+        end
+    end
+end)
+UserInputService.InputEnded:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 then
+        State.Aiming = false
+        if State.AimLoop then State.AimLoop:Disconnect(); State.AimLoop = nil end
+        State.Target = nil
+    end
+end)
+
+-- [Fly]
+local function ToggleFly(enable)
+    local char = Player.Character; if not char or not char:FindFirstChild("HumanoidRootPart") then return end
+    local root = char.HumanoidRootPart
+    if enable then
+        local bg=Instance.new("BodyGyro",root); bg.P=9e4; bg.maxTorque=Vector3.new(9e9,9e9,9e9); bg.cframe=root.CFrame
+        local bv=Instance.new("BodyVelocity",root); bv.velocity=Vector3.zero; bv.maxForce=Vector3.new(9e9,9e9,9e9)
+        State.FlyBodyGyro=bg; State.FlyBodyVel=bv
+        State.FlyLoop=RunService.RenderStepped:Connect(function()
+            if not Player.Character then return end
+            Player.Character.Humanoid.PlatformStand=true
+            local cf=Camera.CFrame; local v=Vector3.zero
+            if UserInputService:IsKeyDown(Enum.KeyCode.W) then v=v+cf.LookVector end
+            if UserInputService:IsKeyDown(Enum.KeyCode.S) then v=v-cf.LookVector end
+            if UserInputService:IsKeyDown(Enum.KeyCode.A) then v=v-cf.RightVector end
+            if UserInputService:IsKeyDown(Enum.KeyCode.D) then v=v+cf.RightVector end
+            if UserInputService:IsKeyDown(Enum.KeyCode.Space) then v=v+Vector3.new(0,1,0) end
+            if UserInputService:IsKeyDown(Enum.KeyCode.LeftControl) then v=v-Vector3.new(0,1,0) end
+            bv.Velocity=v*GCFG.FlySpeed; bg.CFrame=cf
+        end)
+    else
+        if State.FlyLoop then State.FlyLoop:Disconnect() end
+        if State.FlyBodyVel then State.FlyBodyVel:Destroy() end
+        if State.FlyBodyGyro then State.FlyBodyGyro:Destroy() end
+        if char:FindFirstChild("Humanoid") then char.Humanoid.PlatformStand=false end
+    end
+end
+
+-- [Noclip]
+local function NoclipTick()
+    if State.Noclip_Enabled and Player.Character then
+        for _, part in pairs(Player.Character:GetDescendants()) do
+            if part:IsA("BasePart") and part.CanCollide then part.CanCollide=false end
+        end
+    end
+end
+
+-- [Cooldown]
+local cooldownLabels = {}
+local function TriggerCooldown()
+    if State.GlobalCooldown then return false end
+    State.GlobalCooldown = true
+    task.spawn(function()
+        for _, lbl in ipairs(cooldownLabels) do
+            if lbl and lbl.Parent then lbl.Text = "WAIT"; lbl.TextColor3 = red end
+        end
+        task.wait(7)
+        for _, lbl in ipairs(cooldownLabels) do
+            if lbl and lbl.Parent then lbl.Text = "RUN"; lbl.TextColor3 = Color3.new(1,1,1) end
+        end
+        State.GlobalCooldown = false
+    end)
+    return true
+end
+
+-- [Get Item]
+local function GetClosestTouchGiver()
+    local char=Player.Character; if not char then return nil end
+    local pos=char.HumanoidRootPart.Position; local closest, sd = nil, math.huge
+    for _, obj in ipairs(Workspace:GetDescendants()) do
+        if obj:IsA("BasePart") and obj.Name=="TouchGiver" then
+            local d=(obj.Position-pos).Magnitude; if d<sd then sd=d; closest=obj end
+        end
+    end
+    return closest
+end
+
+local function GetItem(itemName)
+    if State.GlobalCooldown then return end
+    if not TriggerCooldown() then return end
+    local char=Player.Character; if not char or not char:FindFirstChild("HumanoidRootPart") then return end
+    local root=char.HumanoidRootPart; local hum=char:FindFirstChild("Humanoid")
+    local origCF=root.CFrame; local origWS=hum.WalkSpeed
+    notify("Weapons", "Finding "..itemName, "warning")
+    local gf=Workspace:FindFirstChild("Prison_ITEMS") and Workspace.Prison_ITEMS:FindFirstChild("giver")
+    local wm=gf and gf:FindFirstChild(itemName)
+    if wm then
+        hum.WalkSpeed=0
+        root.CFrame=CFrame.new(wm:GetPivot().Position)
+        task.wait(0.1)
+        local tp=GetClosestTouchGiver()
+        if tp then
+            root.CFrame=tp.CFrame
+            firetouchinterest(root, tp, 0); firetouchinterest(root, tp, 1)
+            task.wait(0.1)
+            root.CFrame=origCF; hum.WalkSpeed=origWS
+            notify("Weapons", "Got "..itemName, "success")
+        else
+            root.CFrame=origCF; hum.WalkSpeed=origWS
+            notify("Weapons", "Trigger not found", "error")
+        end
+    else
+        notify("Weapons", itemName.." not found", "error")
+    end
+end
+
+-- [Remote Arrest]
+local function RemoteArrest()
+    if State.GlobalCooldown then return end
+    local target=State.SelectedArrestTarget
+    if not target then notify("Arrest","No target selected","error"); return end
+    if not target.Character or not target.Character:FindFirstChild("HumanoidRootPart") then notify("Arrest","Target not spawned","error"); return end
+    local char=Player.Character; local backpack=Player.Backpack
+    local hc=char:FindFirstChild("Handcuffs") or backpack:FindFirstChild("Handcuffs")
+    if not hc then notify("Arrest","Switch to Guards first","error"); return end
+    if not TriggerCooldown() then return end
+    local root=char.HumanoidRootPart; local hum=char:FindFirstChild("Humanoid")
+    local origCF=root.CFrame; local origWS=hum.WalkSpeed; local origCam=Camera.CFrame
+    notify("Arrest","Arresting "..target.Name,"warning")
+    hum.WalkSpeed=0; hum:EquipTool(hc)
+    local loop; loop=RunService.RenderStepped:Connect(function()
+        if target.Character and target.Character:FindFirstChild("HumanoidRootPart") then
+            Camera.CFrame=CFrame.lookAt(Camera.CFrame.Position, target.Character.HumanoidRootPart.Position)
+            root.CFrame=target.Character.HumanoidRootPart.CFrame*CFrame.new(0,0,1.5)
+            root.Velocity=Vector3.zero
+        end
+    end)
+    task.wait(0.35)
+    local center=Vector2.new(Camera.ViewportSize.X/2, Camera.ViewportSize.Y/2)
+    VirtualInputManager:SendMouseMoveEvent(center.X, center.Y, game)
+    task.wait(0.2)
+    VirtualInputManager:SendMouseButtonEvent(center.X, center.Y, 0, true, game, 1)
+    task.wait(0.3)
+    VirtualInputManager:SendMouseButtonEvent(center.X, center.Y, 0, false, game, 1)
+    task.wait(0.1)
+    if loop then loop:Disconnect() end
+    root.CFrame=origCF; Camera.CFrame=origCam; hum.WalkSpeed=origWS
+    notify("Arrest","Arrest attempted","success")
+end
+
+-- [Teleport]
+local function TeleportToTarget()
+    if State.GlobalCooldown then return end
+    local target=State.SelectedTeleportTarget
+    if not target then notify("Teleport","No player selected","error"); return end
+    if not target.Character or not target.Character:FindFirstChild("HumanoidRootPart") then notify("Teleport","Target not spawned","error"); return end
+    if not TriggerCooldown() then return end
+    Player.Character.HumanoidRootPart.CFrame = target.Character.HumanoidRootPart.CFrame * CFrame.new(0,0,3)
+    notify("Teleport","Teleported to "..target.Name,"success")
+end
+
+-- ══════════════════════════════════════════
+--  PAGE 1: HOME
+-- ══════════════════════════════════════════
+local pg1 = pages[1]
+
+local wCard=makeCard(pg1, 1)
+local wRow=makeRow(wCard,1,true,isMobile and 56 or 50)
+local wIbg=Instance.new("Frame"); wIbg.Size=UDim2.new(0,32,0,32); wIbg.Position=UDim2.new(0,12,0.5,-16)
+wIbg.BackgroundColor3=accent; wIbg.BackgroundTransparency=0.82; wIbg.BorderSizePixel=0; wIbg.Parent=wRow
+Instance.new("UICorner",wIbg).CornerRadius=UDim.new(0,8)
+local wIco=Instance.new("TextLabel"); wIco.Size=UDim2.new(1,0,1,0); wIco.Text="🔒"
+wIco.TextSize=16; wIco.BackgroundTransparency=1; wIco.Parent=wIbg
+local wT=Instance.new("TextLabel"); wT.Size=UDim2.new(1,-56,0,16); wT.Position=UDim2.new(0,50,0,6)
+wT.Text="Welcome, "..DisplayName; wT.Font=Enum.Font.GothamBold; wT.TextSize=isMobile and 13 or 11
+wT.TextColor3=T.text; wT.TextXAlignment=Enum.TextXAlignment.Left; wT.BackgroundTransparency=1; wT.ZIndex=5; wT.Parent=wRow
+reg(wT,"TextColor3",LIGHT.text,DARK.text)
+local wS=Instance.new("TextLabel"); wS.Size=UDim2.new(1,-56,0,14); wS.Position=UDim2.new(0,50,0,23)
+wS.Text="Use the sidebar to navigate tools"
+wS.Font=Enum.Font.Gotham; wS.TextSize=isMobile and 9 or 8
+wS.TextColor3=T.muted; wS.TextXAlignment=Enum.TextXAlignment.Left; wS.BackgroundTransparency=1; wS.ZIndex=5; wS.Parent=wRow
+reg(wS,"TextColor3",LIGHT.muted,DARK.muted)
+
+makeSection(pg1,"Status",2)
+local sCard=makeCard(pg1,3)
+makeInfoRow(sCard,1,"Player",Username,T.text,false)
+makeInfoRow(sCard,2,"Display",DisplayName,T.text,false)
+local _, valTeam=makeInfoRow(sCard,3,"Team","...",accent,false)
+makeInfoRow(sCard,4,"Version","v2.0",accent,false)
+makeInfoRow(sCard,5,"Keybind","] toggle",T.muted,true)
+
+-- update team label
+task.spawn(function()
+    while sg and sg.Parent do
+        pcall(function()
+            valTeam.Text = Player.Team and Player.Team.Name or "None"
+        end)
+        task.wait(2)
+    end
+end)
+
+-- ══════════════════════════════════════════
+--  PAGE 2: COMBAT
+-- ══════════════════════════════════════════
+local pg2 = pages[2]
+
+makeSection(pg2,"Awareness",1)
+local cCard1=makeCard(pg2,2)
+makeToggle(cCard1,1,"ESP",false,function(v)
+    State.ESP_Enabled=v
+    if v then State.ESPLoop=RunService.RenderStepped:Connect(UpdateESP)
+    else if State.ESPLoop then State.ESPLoop:Disconnect() end; ESPFolder:ClearAllChildren(); State.ESP_Cache={} end
+end,true)
+
+makeSection(pg2,"Aimbot",3)
+local cCard2=makeCard(pg2,4)
+makeToggle(cCard2,1,"Aimlock",false,function(v)
+    State.Aimlock_Enabled=v
+end,true)
+
+-- ══════════════════════════════════════════
+--  PAGE 3: MOVEMENT
+-- ══════════════════════════════════════════
+local pg3 = pages[3]
+
+makeSection(pg3,"Traversal",1)
+local mCard1=makeCard(pg3,2)
+makeToggle(mCard1,1,"Noclip",false,function(v)
+    State.Noclip_Enabled=v
+    if v then State.NoclipLoop=RunService.Stepped:Connect(NoclipTick)
+    else if State.NoclipLoop then State.NoclipLoop:Disconnect() end end
+end,false)
+makeToggle(mCard1,2,"Fly",false,function(v)
+    State.Fly_Enabled=v; ToggleFly(v)
+end,true)
+
+makeSection(pg3,"Speed",3)
+local mCard2=makeCard(pg3,4)
+makeTextInput(mCard2,1,"Walk Speed (default 16)",function(txt)
+    local val=tonumber(txt)
+    if val and Player.Character and Player.Character:FindFirstChild("Humanoid") then
+        Player.Character.Humanoid.WalkSpeed=val
+        notify("Speed","Set to "..val,"success")
+    end
+end,true)
+
+-- ══════════════════════════════════════════
+--  PAGE 4: TOOLS
+-- ══════════════════════════════════════════
+local pg4 = pages[4]
+
+makeSection(pg4,"Arrest System",1)
+local tCard1=makeCard(pg4,2)
+makeDropdownButton(tCard1,1,"Criminal",function(p)
+    return p.Team and (p.Team.Name=="Criminals" or p.Team.Name=="Inmates")
+end,function(p) State.SelectedArrestTarget=p end,false)
+local _, arrestLbl=makeActionButton(tCard1,3,"Remote Arrest",RemoteArrest,true)
+table.insert(cooldownLabels, arrestLbl and arrestLbl.Parent and arrestLbl.Parent:FindFirstChild("RUN") or nil)
+
+makeSection(pg4,"Teleport System",4)
+local tCard2=makeCard(pg4,5)
+makeDropdownButton(tCard2,1,"Player",function(p) return true end,function(p) State.SelectedTeleportTarget=p end,false)
+local _, tpLbl=makeActionButton(tCard2,3,"Teleport to Target",TeleportToTarget,true)
+
+makeSection(pg4,"Weapons",6)
+local tCard3=makeCard(pg4,7)
+local _, ak=makeActionButton(tCard3,1,"Get AK-47",function() GetItem("AK-47") end,false)
+local _, rem=makeActionButton(tCard3,2,"Get Remington 870",function() GetItem("Remington 870") end,false)
+local _, m9=makeActionButton(tCard3,3,"Get M9 Pistol",function() GetItem("M9") end,true)
+
+-- collect cooldown badge refs
+for _, card in ipairs({tCard1, tCard2, tCard3}) do
+    for _, child in ipairs(card:GetDescendants()) do
+        if child:IsA("TextButton") and child.Text == "RUN" then
+            table.insert(cooldownLabels, child)
+        end
+    end
+end
+
+-- ══════════════════════════════════════════
+--  PAGE 5: MISC
+-- ══════════════════════════════════════════
+local pg5 = pages[5]
+
+makeSection(pg5,"World",1)
+local mCard=makeCard(pg5,2)
+makeActionButton(mCard,1,"Remove Doors",function()
+    local d=Workspace:FindFirstChild("Doors"); local cd=Workspace:FindFirstChild("CellDoors")
+    if d then d:Destroy() end; if cd then cd:Destroy() end
+    notify("Doors","All doors removed","success")
+end,false)
+makeActionButton(mCard,2,"Respawn",function()
+    if Player.Character then Player.Character:BreakJoints() end
+    notify("Respawn","Character reset","warning")
+end,true)
+
+-- ══════════════════════════════════════════
+--  THEME TOGGLE
+-- ══════════════════════════════════════════
+local function applyTheme()
+    T = isDark and DARK or LIGHT
+    applyReg()
+    thBtn.Text = isDark and "☀  Light" or "🌙  Dark"
+    winGlow.ImageColor3 = isDark and Color3.fromRGB(90,70,160) or Color3.fromRGB(180,170,220)
+    for i,btn in ipairs(navBtns) do
+        if i~=activeTab then btn.bg.BackgroundColor3=T.dim; btn.lbl.TextColor3=T.muted end
+    end
+end
+local function doTheme() isDark=not isDark; applyTheme() end
+thBtn.MouseButton1Click:Connect(doTheme); thBtn.TouchTap:Connect(doTheme)
+thBtn.MouseEnter:Connect(function() TweenService:Create(thBtn,tw(0.12),{BackgroundColor3=accent,TextColor3=Color3.new(1,1,1)}):Play() end)
+thBtn.MouseLeave:Connect(function() TweenService:Create(thBtn,tw(0.12),{BackgroundColor3=T.dim,TextColor3=T.muted}):Play() end)
+
+-- ══════════════════════════════════════════
+--  KEYBIND  ]
+-- ══════════════════════════════════════════
+UserInputService.InputBegan:Connect(function(input, gp)
+    if gp then return end
+    if input.UserInputType==Enum.UserInputType.Keyboard and input.KeyCode==Enum.KeyCode.RightBracket then
+        sg.Enabled=not sg.Enabled
+    end
+end)
+
+-- ══════════════════════════════════════════
+--  GLOW PULSE
+-- ══════════════════════════════════════════
+task.spawn(function()
+    while sg and sg.Parent do
+        TweenService:Create(winGlow,TweenInfo.new(2.4,Enum.EasingStyle.Sine,Enum.EasingDirection.InOut),{ImageTransparency=0.82}):Play()
+        task.wait(2.4)
+        TweenService:Create(winGlow,TweenInfo.new(2.4,Enum.EasingStyle.Sine,Enum.EasingDirection.InOut),{ImageTransparency=0.92}):Play()
+        task.wait(2.4)
+    end
+end)
+
+-- ══════════════════════════════════════════
+--  OPEN ANIMATION
+-- ══════════════════════════════════════════
+win.AnchorPoint = Vector2.new(0.5, 0.5)
+win.Position = UDim2.new(0, startX + math.floor(WIN_W/2), 0, startY + math.floor(WIN_H/2))
+win.Size = UDim2.new(0,0,0,0); win.BackgroundTransparency = 1
+local openTween = TweenService:Create(win, tw(0.4, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
+    Size = UDim2.new(0,WIN_W,0,WIN_H), BackgroundTransparency = 0})
+openTween:Play()
+openTween.Completed:Connect(function()
+    win.AnchorPoint = Vector2.new(0, 0)
+    win.Position = UDim2.new(0, startX, 0, startY)
+end)
+
+setTab(1)
+notify("Feather Prison","Loaded — press ] to hide","success")
+
+print("[Feather Prison v2.0] Ready — ] to toggle")
