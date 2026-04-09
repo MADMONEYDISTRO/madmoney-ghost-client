@@ -1,19 +1,6 @@
 -- ══════════════════════════════════════════
 --  FEATHERHUB v3.0
 -- ══════════════════════════════════════════
---  KEY FIXES from console output:
---    • Authority: prompt is on "Lid" (child of MilitaryCrateTIMED), HoldDuration=7
---      Snap to Lid position, fireproximityprompt(lid_prompt) directly
---    • After defuse, second prompt appears on same Lid (or new child) — re-scan
---    • Loot deposit: runs after EVERY crate, not just at end of loop
---    • All prompts: use fireproximityprompt() exclusively (confirmed available)
---    • Snap position: always snap to the PROMPT'S PARENT part, not the model root
---    • Gallery/Cola/MoneyStack: same fireproximityprompt fix
---    • Paintings: scan for LootablePainting, snap to it, fireproximityprompt
---    • Item disappear guard: check part/prompt still exists before each action
---    • Crosshair: Drawing API lines (always visible, not tied to ScreenGui)
--- ══════════════════════════════════════════
-
 if _G.FeatherHubLoaded then
     warn("[FeatherHub] Already loaded, skipping.")
     return
